@@ -13,27 +13,29 @@
 ### Usage:
 
 Clone this repository and run following instructions.
-> git clone git@github.com:weidel-p/go-robot-nogo-robot.git
+```
+git clone git@github.com:weidel-p/go-robot-nogo-robot.git
+```
 
 First get all submodules.
-> git submodule init
-
-> git submodule update --remote
+```
+git submodule init
+git submodule update --remote
+```
 
 Then build the robotic environment.
-> cd catkin_ws
-
-> catkin_make
-
-> catkin_make install
-
-> source devel/setup.zsh
-
-> cd ..
+```
+cd catkin_ws
+catkin_make
+catkin_make install
+source devel/setup.zsh
+cd ..
+```
 
 Run the model and plot all figures (this may take a while).
-> snakemake
-
+```
+snakemake
+```
 
 
 
