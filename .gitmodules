@@ -1,0 +1,4 @@
+[submodule "catkin_ws/src/ros-music-adapters"]
+	path = catkin_ws/src/ros-music-adapters
+	url = git@github.com:incf-music/ros-music-adapters.git
+	branch = master

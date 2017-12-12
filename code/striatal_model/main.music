@@ -1,0 +1,58 @@
+stoptime=2000.
+music_timestep=0.001
+rtf=0.2
+[clock]
+  binary=ros_cont_adapter
+  args=
+  np=1
+  ros_topic=/no_topic
+  message_type=FloatArray
+  sensor_update_rate=20
+  ros_node_name=ros_clock
+[clock_encoder]
+  binary=rate_encoder
+  np=1
+  args=
+  rate_min=100
+  rate_max=100
+[nest]
+  binary=./model.py
+  args=
+  np=1
+[decoder]
+  binary=linear_decoder
+  args=
+  np=1
+  tau=0.2
+[readout]
+  binary=cont_cont_adapter
+  args=
+  np=1
+  weights_filename=channel_readout.dat
+[sigmoid]
+  binary=sigmoid_adapter
+  args=
+  np=1
+  scale=2
+  slope=4
+  x_offset=4
+[twist]
+  binary=cont_cont_adapter
+  argx=
+  np=1
+  weights_filename=channel_to_twist.dat
+[command]
+  binary=cont_ros_adapter
+  args=
+  np=1
+  ros_topic=/Pioneer3AT/cmd_vel
+  message_mapping_filename=twist_mapping.dat
+  command_rate=10
+  ros_node_name=command_node
+clock.out->clock_encoder.in[1]
+clock_encoder.out->nest.in[1]
+nest.out->decoder.in[160]
+decoder.out->readout.in[160]
+readout.out->sigmoid.in[2]
+sigmoid.out->twist.in[2]
+twist.out->command.in[2]

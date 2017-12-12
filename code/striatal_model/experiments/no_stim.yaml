@@ -1,0 +1,9 @@
+stim-params:
+    - hemisphere: none 
+      cell-type: none 
+      start_times: []
+      stop_times: []
+      targets: []
+      amplitude: 0.
+
+
