@@ -1,0 +1,14 @@
+stim-params:
+    - hemisphere: left 
+      cell-type: D2
+      start_times: [5000.]
+      stop_times: [15000.]
+      targets: [[[all]]] 
+      amplitude: 100.
+    - hemisphere: right 
+      cell-type: D2
+      start_times: [5000.]
+      stop_times: [15000.]
+      targets: [[[all]]] 
+      amplitude: 100.
+
