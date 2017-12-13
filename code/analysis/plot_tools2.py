@@ -162,7 +162,9 @@ def get_spikes_mask(senders, times, nids, scale=10):
     return spike_masks
 
 
-def filter_spikes(spikes, kernel, scale=10):
+def filter_spikes(spikes, kernel, tau_exp = 0.3, scale=10):
+    spikes = np.array(spikes) / tau_exp
+
     fst = [np.convolve(st, kernel, 'full')[:int(params.runtime) * scale] for st in spikes]
     if any([any(np.isnan(x)) for x in fst]):
         print "spikes nan", spikes

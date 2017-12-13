@@ -16,6 +16,11 @@ import copy
 import matplotlib.patches as patches
 import seaborn as sbn
 
+seaborn.set_context('paper', font_scale=3.0, rc={"lines.linewidth": 2.5})
+seaborn.set_style('whitegrid', {"axes.linewidth": 2.5})
+
+
+
 num_trials = 5
 print len(sys.argv), sys.argv
 
@@ -60,7 +65,7 @@ for trial in range(num_trials):
     spikes_d1 = np.hstack([times[np.where(senders == nid)[0]] for nid in all_d1])
     spikes_d2 = np.hstack([times[np.where(senders == nid)[0]] for nid in all_d2])
 
-    stepsize = 10.  # ms
+    stepsize = 100.  # ms
     window_size_short = int(0.3 * (stim_times_stop[0] - stim_times_start[0]))
     window_size_long = int(1.2 * (stim_times_stop[0] - stim_times_start[0]))
 
@@ -94,7 +99,7 @@ for trial in range(num_trials):
     ccs_shuffled_independent_short = []
     ccs_shuffled_independent_long = []
 
-    for t in np.arange(0, len(hist_all_d1) - window_size_short, window_size_short / stepsize):
+    for t in np.arange(0, len(hist_all_d1) - window_size_short, stepsize):
         t = int(t)
 
         hist_d1 = hist_all_d1[t:t + window_size_short]
@@ -110,7 +115,7 @@ for trial in range(num_trials):
         ccs_shuffled_independent_short.append(correlate2(
             hist_d1_shuffled_independent, hist_d2_shuffled_independent)[0, 1])
 
-    for t in np.arange(0, len(hist_all_d1) - window_size_long, window_size_long / stepsize):
+    for t in np.arange(0, len(hist_all_d1) - window_size_long, stepsize):
         t = int(t)
 
         hist_d1 = hist_all_d1[t:t + window_size_long]
@@ -135,9 +140,9 @@ for trial in range(num_trials):
 
 
 time_short = np.arange(window_size_short / 2., len(hist_all_d1) -
-                       window_size_short / 2., window_size_short / stepsize) / 1000.
+                       window_size_short / 2., stepsize) / 1000.
 time_long = np.arange(window_size_long / 2., len(hist_all_d1) -
-                      window_size_long / 2., window_size_long / stepsize) / 1000.
+                      window_size_long / 2., stepsize) / 1000.
 
 
 fig = pl.figure(0, figsize=[16, 10])
@@ -149,7 +154,7 @@ ax.plot(np.arange(len(hist_all_d2)) / 1000., hist_all_d2, label='D2', color=colo
 rateMax = np.max([np.max(hist_all_d1), np.max(hist_all_d2)])
 rateMin = np.min([np.min(hist_all_d1), np.min(hist_all_d2)])
 histMax = np.max([np.max(hist_all_d1), np.max(hist_all_d2)])
-ax.set_ylabel("Mean activity (spks/s)", fontsize=30, fontweight='bold')
+ax.set_ylabel("Mean activity (spks/s)", fontweight='bold')
 
 ax.add_patch(patches.Rectangle(
     (1., rateMin - 0.01), 1 + window_size_long / 1000., (rateMax - rateMin) * 1.10, edgecolor=colors[3], linewidth=3.5, facecolor='none'
@@ -162,12 +167,10 @@ ax.add_patch(patches.Rectangle(
 ax.set_ylim(min(0, rateMin), rateMax * 1.1)
 
 for x in ax.get_xticklabels():
-    x.set_fontsize(20)
     x.set_fontweight('bold')
 
-for x in ax.get_yticklabels():
-    x.set_fontsize(20)
-    x.set_fontweight('bold')
+ax.set_xticklabels([])
+
 
 
 ax2 = fig.add_subplot(2, 1, 2)
@@ -179,20 +182,18 @@ sbn.tsplot(all_ccs_shuffled_independent_long, time=time_long, color=colors[4], a
 
 ax2.set_xlim([0, int(params.runtime) / 1000.])
 ax2.hlines(0, 0, int(params.runtime) / 1000., colors='k', linestyle="dashed")
-ax2.set_ylabel("CC", fontsize=30, fontweight='bold')
+ax2.set_ylabel("CC", fontweight='bold')
 
 y_max = max(np.ravel([ccs_short, ccs_shuffled_independent_short]))
 y_min = min(np.ravel([ccs_short, ccs_shuffled_independent_short]))
 ax2.set_ylim(-1, 1.0)
 for x in ax2.get_xticklabels():
-    x.set_fontsize(20)
     x.set_fontweight('bold')
 
 for x in ax2.get_yticklabels():
-    x.set_fontsize(20)
     x.set_fontweight('bold')
 
 ax2.grid('off')
-ax2.set_xlabel("Time (s)", fontsize=30, fontweight='bold')
+ax2.set_xlabel("Time (s)", fontweight='bold')
 
 pl.savefig(out_fn)

@@ -43,7 +43,7 @@ def plot_change(data, label, fn):
     ax.set_ylim([-1, 1])
     ax.set_ylabel(label, fontweight='bold')
     sbn.violinplot(data, color=colors.colors[1], size=15., scale='width', ax=ax)
-    pl.xticks([0, 1], ["With D2-D2", "No D2-D2"], rotation=70)
+    pl.xticks([0, 1], ["with D2-D2", "w/o D2-D2"], rotation=70)
     pl.savefig(fn)
 
 

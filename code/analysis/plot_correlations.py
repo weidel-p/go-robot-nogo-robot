@@ -13,6 +13,9 @@ import params
 from colors import colors
 from plot_tools2 import *
 
+seaborn.set_context('paper', font_scale=4.0, rc={"lines.linewidth": 3.0})
+seaborn.set_style('whitegrid', {"axes.linewidth": 3.0})
+
 grid_dimensions = [6, 6]
 
 spikes_fn = sys.argv[1]
@@ -100,8 +103,6 @@ for i, n0 in enumerate(selected_neurons):
                 cc_by_dist['d1d2_far_bckgrnd'].append(correlations_bckgrnd[i, j])
 
 
-matplotlib.rc('xtick', labelsize=15)
-matplotlib.rc('ytick', labelsize=15)
 
 fig = pl.figure(figsize=[10, 16])
 ax_d1d1_stim = fig.add_subplot("311")
@@ -120,16 +121,16 @@ elif "unilateral_D1" in experiment_fn:
 else:
     title = experiment_fn.split("/")[-1].replace(".yaml", "")
 
-ax_d1d1_stim.set_title(title, fontsize=30, fontweight='bold')
+ax_d1d1_stim.set_title(title, fontweight='bold')
 ax_d1d1_stim.grid(linewidth=0.6)
 ax_d2d2_stim.grid(linewidth=0.6)
 ax_d1d2_stim.grid(linewidth=0.6)
 
-ax_d1d1_stim.set_ylabel("D1-D1", fontsize=30, fontweight='bold')
-ax_d2d2_stim.set_ylabel("D2-D2", fontsize=30, fontweight='bold')
-ax_d1d2_stim.set_ylabel("D1-D2", fontsize=30, fontweight='bold')
+ax_d1d1_stim.set_ylabel("D1-D1 (PDF)", fontweight='bold')
+ax_d2d2_stim.set_ylabel("D2-D2 (PDF)", fontweight='bold')
+ax_d1d2_stim.set_ylabel("D1-D2 (PDF)", fontweight='bold')
 
-ax_d1d2_stim.set_xlabel("CC", fontsize=30, fontweight='bold')
+ax_d1d2_stim.set_xlabel("CC", fontweight='bold')
 
 
 ylim = 7.0
@@ -152,24 +153,14 @@ for cc_type in cc_by_dist.keys():
             ax_d1d1_stim.plot(edges[:-1], hist, 'o-', color=color,
                               label="Dist: {} D1-D1".format(dist), linewidth=lw, markersize=ms)
             ax_d1d1_stim.set_ylim(-0.5, ylim)
-            for x in ax_d1d1_stim.get_xticklabels():
-                x.set_fontweight('bold')
-                x.set_fontsize(20)
-            for x in ax_d1d1_stim.get_yticklabels():
-                x.set_fontweight('bold')
-                x.set_fontsize(20)
+            ax_d1d1_stim.set_xticklabels([])
 
     if cell_type == 'd2d2':
         if stim_type == 'stim':
             ax_d2d2_stim.plot(edges[:-1], hist, 'o-', color=color,
                               label="Dist: {} D2-D2".format(dist), linewidth=lw, markersize=ms)
             ax_d2d2_stim.set_ylim(-0.5, ylim)
-            for x in ax_d2d2_stim.get_xticklabels():
-                x.set_fontweight('bold')
-                x.set_fontsize(20)
-            for x in ax_d2d2_stim.get_yticklabels():
-                x.set_fontweight('bold')
-                x.set_fontsize(20)
+            ax_d2d2_stim.set_xticklabels([])
 
     if cell_type == 'd1d2':
         if stim_type == 'stim':
@@ -178,10 +169,8 @@ for cc_type in cc_by_dist.keys():
             ax_d1d2_stim.set_ylim(-0.5, ylim)
             for x in ax_d1d2_stim.get_xticklabels():
                 x.set_fontweight('bold')
-                x.set_fontsize(20)
             for x in ax_d1d2_stim.get_yticklabels():
                 x.set_fontweight('bold')
-                x.set_fontsize(20)
 
 fig.tight_layout(w_pad=0.2)
 seaborn.despine()

@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import pandas
 import seaborn as sbn
 import matplotlib.collections as collections
+import scalebars
 
 
 grid_dimensions = [6, 6]
@@ -122,27 +123,30 @@ fig.set_tight_layout(True)
 
 ax0 = fig.add_subplot(1, 1, 1)
 
+scalebars.add_scalebar(ax0, matchx=False, matchy=False, hidex=False, hidey=False, size=3, label="3 Hz", horizontal=False)
+
 x = np.arange(0, 30, 0.001 * step_size)
 collection = collections.BrokenBarHCollection.span_where(
-    x, ymin=8.0, ymax=9.0, where=switching > 0, facecolor=colors.colors[0], alpha=1.0)
+    x, ymin=26.5, ymax=29.5, where=switching > 0, facecolor=colors.colors[0], alpha=1.0)
 ax0.add_collection(collection)
 
 collection = collections.BrokenBarHCollection.span_where(
-    x, ymin=8.0, ymax=9.0, where=switching < 0, facecolor=colors.colors[2], alpha=1.0)
+    x, ymin=26.5, ymax=29.5, where=switching < 0, facecolor=colors.colors[2], alpha=1.0)
 ax0.add_collection(collection)
 
 collection = collections.BrokenBarHCollection.span_where(
-    x, ymin=8.0, ymax=9.0, where=switching == 0, facecolor=colors.colors[-1], alpha=1.0)
+    x, ymin=26.5, ymax=29.5, where=switching == 0, facecolor=colors.colors[-1], alpha=1.0)
 ax0.add_collection(collection)
 
-ax0.plot(np.arange(0, 30, 0.001), filtered_spikes_go_left_d1[20000:50000] + 6, label="D1 go left")
-ax0.plot(np.arange(0, 30, 0.001), filtered_spikes_go_left_d2[20000:50000] + 4, label="D2 go left")
-ax0.plot(np.arange(0, 30, 0.001), filtered_spikes_go_right_d1[20000:50000] + 2, label="D1 go right")
+ax0.plot(np.arange(0, 30, 0.001), filtered_spikes_go_left_d1[20000:50000] + 21, label="D1 go left")
+ax0.plot(np.arange(0, 30, 0.001), filtered_spikes_go_left_d2[20000:50000] + 14, label="D2 go left")
+ax0.plot(np.arange(0, 30, 0.001), filtered_spikes_go_right_d1[20000:50000] + 7, label="D1 go right")
 ax0.plot(np.arange(0, 30, 0.001), filtered_spikes_go_right_d2[20000:50000] + 0, label="D2 go right")
 ax0.set_xlabel("Time (s)", fontweight='bold')
-pl.yticks([0, 2, 4, 6, 8], ["turn right D2", "turn right D1",
+pl.yticks([0, 7, 14, 21, 28], ["turn right D2", "turn right D1",
                             "turn left D2", "turn left D1", "winning channel"], rotation=40)
-ax0.set_ylim([-2, 9.])
+ax0.set_ylim([-4, 29.5])
+
 
 fig.savefig(traces_out_fn)
 

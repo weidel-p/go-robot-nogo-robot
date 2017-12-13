@@ -111,7 +111,7 @@ cc_d2_bckgrnd = correlate2(filtered_spikes_d2_bckgrnd, filtered_spikes_d2_bckgrn
 cc_d1_d2_bckgrnd = correlate2(filtered_spikes_d1_bckgrnd, filtered_spikes_d2_bckgrnd, 2)
 
 vmin = -0.2
-vmax = 0.2
+vmax = 0.4
 gridLen = (params.num_neurons_per_channel * params.num_channels) / step
 gridStep = params.num_neurons_per_channel / step
 minor_ticks = np.arange(0, gridLen + gridStep, gridStep)  # ticks for grids
@@ -128,15 +128,17 @@ farNeighChan = [get_ChanNum_gridPos(x[0], x[1]) for x in farNeigh]
 
 cmap = cm.RdBu_r
 
-if 'sequences.yaml' in experiment_fn or 'sequencesd1d2.yaml' in experiment_fn or 'competingActions.yaml' in experiment_fn or 'competingActionsNoD2Conn.yaml' in experiment_fn:
+if 'no_stim' in experiment_fn or 'sequences.yaml' in experiment_fn or 'sequencesd1d2.yaml' in experiment_fn or 'competingActions.yaml' in experiment_fn or 'competingActionsNoD2Conn.yaml' in experiment_fn:
     minLim = vmin
-    maxLim = vmax * 2.
-    cmap1 = shiftedColorMap(cmap, min_val=minLim, max_val=maxLim, name="shifted")
+    maxLim = vmax * 1.
 
 else:
     minLim = vmin
-    maxLim = vmax * 4.
-    cmap1 = shiftedColorMap(cmap, min_val=minLim, max_val=maxLim, name="shifted")
+    maxLim = vmax * 2.
+
+
+cmap1 = shiftedColorMap(cmap, min_val=minLim, max_val=maxLim, name="shifted_stim")
+cmap = shiftedColorMap(cmap, min_val=vmin, max_val=vmax, name="shifted_bck")
 
 
 ax_stim11.pcolormesh(cc_d1_stim[:len(cc_d1_stim) / 2, len(cc_d1_stim) / 2:], vmin=minLim, vmax=maxLim, cmap=cmap1)
