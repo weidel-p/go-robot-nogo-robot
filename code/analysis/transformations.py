@@ -347,11 +347,14 @@ def rotation_from_matrix(matrix):
     # rotation angle depending on direction
     cosa = (numpy.trace(R33) - 1.0) / 2.0
     if abs(direction[2]) > 1e-8:
-        sina = (R[1, 0] + (cosa - 1.0) * direction[0] * direction[1]) / direction[2]
+        sina = (R[1, 0] + (cosa - 1.0) * direction[0]
+                * direction[1]) / direction[2]
     elif abs(direction[1]) > 1e-8:
-        sina = (R[0, 2] + (cosa - 1.0) * direction[0] * direction[2]) / direction[1]
+        sina = (R[0, 2] + (cosa - 1.0) * direction[0]
+                * direction[2]) / direction[1]
     else:
-        sina = (R[2, 1] + (cosa - 1.0) * direction[1] * direction[2]) / direction[0]
+        sina = (R[2, 1] + (cosa - 1.0) * direction[1]
+                * direction[2]) / direction[0]
     angle = math.atan2(sina, cosa)
     return angle, direction, point
 
@@ -1186,7 +1189,8 @@ def quaternion_matrix(quaternion):
     q *= math.sqrt(2.0 / nq)
     q = numpy.outer(q, q)
     return numpy.array((
-        (1.0 - q[1, 1] - q[2, 2],     q[0, 1] - q[2, 3],     q[0, 2] + q[1, 3], 0.0),
+        (1.0 - q[1, 1] - q[2, 2],     q[0, 1] -
+         q[2, 3],     q[0, 2] + q[1, 3], 0.0),
         (q[0, 1] + q[2, 3], 1.0 - q[0, 0] - q[2, 2],     q[1, 2] - q[0, 3], 0.0),
         (q[0, 2] - q[1, 3],     q[1, 2] + q[0, 3], 1.0 - q[0, 0] - q[1, 1], 0.0),
         (0.0,                 0.0,                 0.0, 1.0)

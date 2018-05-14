@@ -8,7 +8,7 @@ import pickle
 import pdb
 import sys
 sys.path.append(os.path.join(os.path.dirname(
-    __file__), '..', 'striatal_model/'))
+    __file__), '..', 'two_hemisphere_model/'))
 import params as p
 import json
 import matplotlib.pyplot as pl

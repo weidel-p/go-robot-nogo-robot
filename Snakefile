@@ -40,6 +40,11 @@ rule all:
 
         expand("figs/{experiments}/new_corr_with_stim_left.pdf", experiments=EXPERIMENTS),
         expand("figs/{experiments}/new_corr_with_stim_right.pdf", experiments=EXPERIMENTS),
+        expand("figs/{experiments}/new_corr_with_bckgrnd_left.pdf", experiments=EXPERIMENTS),
+        expand("figs/{experiments}/new_corr_with_bckgrnd_right.pdf", experiments=EXPERIMENTS),
+
+        expand("figs/{experiments}/corr_left.pdf", experiments=EXPERIMENTS),
+        expand("figs/{experiments}/corr_right.pdf", experiments=EXPERIMENTS),
 
         expand("figs/{experiments}/trajectory.pdf", experiments=EXPERIMENTS),
         
@@ -153,7 +158,7 @@ rule plot_CC:
 
 
 rule new_plot_CC_grid:
-    threads: 5
+    threads: 1
     input:
         expand('data_long/{{experiment}}/{trial}/{{hemi}}_hemisphere.gdf', trial=SINGLE_TRIALS),
         expand('data_long/{{experiment}}/{trial}/neuron_ids_{{hemi}}_hemisphere.json', trial=SINGLE_TRIALS),
@@ -194,7 +199,7 @@ rule plot_trajectories:
     run:
         shell('ipython -c "%run code/analysis/trajectory_plotter.py {input} {output}"')
 
-rule plot_activityChange_MultTrials:
+rule plot_activityChange:
     input:
         expand('data/{{experiment}}/{trial}/left_hemisphere.gdf', trial=TRIALS),
         expand('data/{{experiment}}/{trial}/right_hemisphere.gdf', trial=TRIALS),

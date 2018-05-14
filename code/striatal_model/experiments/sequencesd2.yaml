@@ -4,12 +4,12 @@ stim-params:
       start_times: [4000.]
       stop_times: [9000.]
       targets: [[[3, 4]]]
-      amplitude: 150.
+      amplitude: 100.
     - hemisphere: right
       cell-type: D2
       start_times: [11000.]
       stop_times: [16000.]
       targets: [[[3, 3]]]
-      amplitude: 150.
+      amplitude: 100.
 stim-type: rate 
     

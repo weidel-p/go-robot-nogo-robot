@@ -18,8 +18,10 @@ def get_stim_times(cfg, hemisphere, params, mask=False, scale=10):
 
     for c in cfg["stim-params"]:
         if c['hemisphere'] == hemisphere:
-            stim_times_start = np.array(c['start_times']) * scale  # runtimes for correlations is 10 times longer
-            stim_times_stop = np.array(c['stop_times']) * scale  # runtimes for correlations is 10 times longer
+            # runtimes for correlations is 10 times longer
+            stim_times_start = np.array(c['start_times']) * scale
+            # runtimes for correlations is 10 times longer
+            stim_times_stop = np.array(c['stop_times']) * scale
         else:
             pass
 
@@ -34,8 +36,10 @@ def get_stim_times(cfg, hemisphere, params, mask=False, scale=10):
         # careful, these plots don't make sense and are just for comparison
         for c in cfg["stim-params"]:
             if c['hemisphere'] == hemisphere:
-                stim_times_start = np.array(c['start_times']) * scale  # runtimes for correlations is 10 times longer
-                stim_times_stop = np.array(c['stop_times']) * scale  # runtimes for correlations is 10 times longer
+                # runtimes for correlations is 10 times longer
+                stim_times_start = np.array(c['start_times']) * scale
+                # runtimes for correlations is 10 times longer
+                stim_times_stop = np.array(c['stop_times']) * scale
             else:
                 pass
 
@@ -51,13 +55,15 @@ def get_stim_times(cfg, hemisphere, params, mask=False, scale=10):
         # the times before and after stimulus contain strong transients, this
         # destroys the correlations, here we split stim from background time while removing the transients
 
-        stim_times = np.zeros(int(params.runtime) * scale)  # runtimes for correlations is 10 times longer
+        # runtimes for correlations is 10 times longer
+        stim_times = np.zeros(int(params.runtime) * scale)
         for t, _ in enumerate(stim_times):
             for boundaries in zip(stim_times_start, stim_times_stop):
                 if t >= boundaries[0] + transient_duration and t < boundaries[1]:
                     stim_times[t] = 1
 
-        bckgrnd_times = np.zeros(int(params.runtime) * scale)  # runtimes for correlations is 10 times longer
+        # runtimes for correlations is 10 times longer
+        bckgrnd_times = np.zeros(int(params.runtime) * scale)
         for t, _ in enumerate(bckgrnd_times):
             for boundaries in zip(stim_times_start, stim_times_stop):
                 if t < boundaries[0] or t >= boundaries[1] + transient_duration:
@@ -162,10 +168,11 @@ def get_spikes_mask(senders, times, nids, scale=10):
     return spike_masks
 
 
-def filter_spikes(spikes, kernel, tau_exp = 0.3, scale=10):
+def filter_spikes(spikes, kernel, tau_exp=0.3, scale=10):
     spikes = np.array(spikes) / tau_exp
 
-    fst = [np.convolve(st, kernel, 'full')[:int(params.runtime) * scale] for st in spikes]
+    fst = [np.convolve(st, kernel, 'full')[:int(
+        params.runtime) * scale] for st in spikes]
     if any([any(np.isnan(x)) for x in fst]):
         print "spikes nan", spikes
     return fst
@@ -243,3 +250,13 @@ def shiftedColorMap(cmap, min_val, max_val, name):
     newcmap = matplotlib.colors.LinearSegmentedColormap(name, cdict)
     plt.register_cmap(cmap=newcmap)
     return newcmap
+
+
+# calculate all possible distances
+all_possible_distances = []
+for x in range(grid_dimensions[0]):
+    for y in range(grid_dimensions[1]):
+        all_possible_distances.append(get_dist([0, 0], [x, y]))
+
+all_possible_distances = np.unique(all_possible_distances)
+all_possible_distances = sorted(all_possible_distances)

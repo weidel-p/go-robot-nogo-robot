@@ -8,7 +8,7 @@ import seaborn
 import sys
 import json
 import yaml
-sys.path.append("code/striatal_model")
+sys.path.append("code/two_hemisphere_model")
 import params
 from colors import colors
 from plot_tools2 import *
@@ -18,7 +18,6 @@ import seaborn as sbn
 
 seaborn.set_context('paper', font_scale=3.0, rc={"lines.linewidth": 2.5})
 seaborn.set_style('whitegrid', {"axes.linewidth": 2.5})
-
 
 
 num_trials = 5
@@ -57,13 +56,16 @@ for trial in range(num_trials):
     with open(experiment_fn, "r+") as f:
         cfg = yaml.load(f)
 
-    stim_times_start, stim_times_stop = get_stim_times(cfg, hemisphere, params, mask=False, scale=1)
+    stim_times_start, stim_times_stop = get_stim_times(
+        cfg, hemisphere, params, mask=False, scale=1)
 
     all_d1 = np.ravel([c['d1'] for c in channels])
     all_d2 = np.ravel([c['d2'] for c in channels])
 
-    spikes_d1 = np.hstack([times[np.where(senders == nid)[0]] for nid in all_d1])
-    spikes_d2 = np.hstack([times[np.where(senders == nid)[0]] for nid in all_d2])
+    spikes_d1 = np.hstack([times[np.where(senders == nid)[0]]
+                           for nid in all_d1])
+    spikes_d2 = np.hstack([times[np.where(senders == nid)[0]]
+                           for nid in all_d2])
 
     stepsize = 100.  # ms
     window_size_short = int(0.3 * (stim_times_stop[0] - stim_times_start[0]))
@@ -108,7 +110,8 @@ for trial in range(num_trials):
 
         hist_d1_shuffled = hist_all_d1_shuffled[t:t + window_size_short]
         hist_d2_shuffled = hist_all_d2_shuffled[t:t + window_size_short]
-        ccs_shuffled_short.append(correlate2(hist_d1_shuffled, hist_d2_shuffled)[0, 1])
+        ccs_shuffled_short.append(correlate2(
+            hist_d1_shuffled, hist_d2_shuffled)[0, 1])
 
         hist_d1_shuffled_independent = hist_all_d1_shuffled_independent[t:t + window_size_short]
         hist_d2_shuffled_independent = hist_all_d2_shuffled_independent[t:t + window_size_short]
@@ -124,7 +127,8 @@ for trial in range(num_trials):
 
         hist_d1_shuffled = hist_all_d1_shuffled[t:t + window_size_long]
         hist_d2_shuffled = hist_all_d2_shuffled[t:t + window_size_long]
-        ccs_shuffled_long.append(correlate2(hist_d1_shuffled, hist_d2_shuffled)[0, 1])
+        ccs_shuffled_long.append(correlate2(
+            hist_d1_shuffled, hist_d2_shuffled)[0, 1])
 
         hist_d1_shuffled_independent = hist_all_d1_shuffled_independent[t:t + window_size_long]
         hist_d2_shuffled_independent = hist_all_d2_shuffled_independent[t:t + window_size_long]
@@ -149,8 +153,10 @@ fig = pl.figure(0, figsize=[16, 10])
 
 ax = fig.add_subplot(2, 1, 1)
 
-ax.plot(np.arange(len(hist_all_d1)) / 1000., hist_all_d1, label='D1', color=colors[0])
-ax.plot(np.arange(len(hist_all_d2)) / 1000., hist_all_d2, label='D2', color=colors[1])
+ax.plot(np.arange(len(hist_all_d1)) / 1000.,
+        hist_all_d1, label='D1', color=colors[0])
+ax.plot(np.arange(len(hist_all_d2)) / 1000.,
+        hist_all_d2, label='D2', color=colors[1])
 rateMax = np.max([np.max(hist_all_d1), np.max(hist_all_d2)])
 rateMin = np.min([np.min(hist_all_d1), np.min(hist_all_d2)])
 histMax = np.max([np.max(hist_all_d1), np.max(hist_all_d2)])
@@ -172,13 +178,16 @@ for x in ax.get_xticklabels():
 ax.set_xticklabels([])
 
 
-
 ax2 = fig.add_subplot(2, 1, 2)
 
-sbn.tsplot(all_ccs_short, time=time_short, color=colors[2], ax=ax2, linewidth=2.5, marker='o')
-sbn.tsplot(all_ccs_shuffled_independent_short, time=time_short, color=colors[4], ax=ax2, linewidth=2.5, marker='o')
-sbn.tsplot(all_ccs_long, time=time_long, color=colors[3], ax=ax2, linewidth=2.5, marker='o')
-sbn.tsplot(all_ccs_shuffled_independent_long, time=time_long, color=colors[4], ax=ax2, linewidth=2.5, marker='o')
+sbn.tsplot(all_ccs_short, time=time_short,
+           color=colors[2], ax=ax2, linewidth=2.5, marker='o')
+sbn.tsplot(all_ccs_shuffled_independent_short, time=time_short,
+           color=colors[4], ax=ax2, linewidth=2.5, marker='o')
+sbn.tsplot(all_ccs_long, time=time_long,
+           color=colors[3], ax=ax2, linewidth=2.5, marker='o')
+sbn.tsplot(all_ccs_shuffled_independent_long, time=time_long,
+           color=colors[4], ax=ax2, linewidth=2.5, marker='o')
 
 ax2.set_xlim([0, int(params.runtime) / 1000.])
 ax2.hlines(0, 0, int(params.runtime) / 1000., colors='k', linestyle="dashed")

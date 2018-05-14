@@ -8,7 +8,7 @@ import seaborn
 import sys
 import json
 import yaml
-sys.path.append("code/striatal_model")
+sys.path.append("code/two_hemisphere_model")
 import params
 from colors import colors
 from plot_tools2 import *
@@ -33,7 +33,8 @@ with open(channels_fn, "r+") as f:
 with open(experiment_fn, "r+") as f:
     cfg = yaml.load(f)
 
-stim_times_start, stim_times_stop = get_stim_times(cfg, hemisphere, params, mask=False)
+stim_times_start, stim_times_stop = get_stim_times(
+    cfg, hemisphere, params, mask=False)
 
 all_d1 = np.ravel([c['d1'] for c in channels])
 all_d2 = np.ravel([c['d2'] for c in channels])
@@ -86,7 +87,8 @@ binsizes = np.linspace(10, 600, 30)
 
 for binsize in binsizes:
 
-    bins = np.arange(0, int(params.runtime) * 10, binsize)  # runtime for correlations is 10 times longer
+    # runtime for correlations is 10 times longer
+    bins = np.arange(0, int(params.runtime) * 10, binsize)
     stim_bins = np.array([])
     bckgrnd_bins = np.array([])
 
@@ -97,11 +99,15 @@ for binsize in binsizes:
 
     bckgrnd_bins = np.array([b for b in bins if not b in stim_bins])
 
-    hist_d1 = np.histogram(spikes_d1, bins=bins)[0].astype('float') * 1000. / (binsize * len(all_d1))
-    hist_d2 = np.histogram(spikes_d2, bins=bins)[0].astype('float') * 1000. / (binsize * len(all_d2))
+    hist_d1 = np.histogram(spikes_d1, bins=bins)[0].astype(
+        'float') * 1000. / (binsize * len(all_d1))
+    hist_d2 = np.histogram(spikes_d2, bins=bins)[0].astype(
+        'float') * 1000. / (binsize * len(all_d2))
 
-    hist_d1_stim = np.histogram(spikes_d1_stim, bins=stim_bins)[0].astype('float') * 1000. / (binsize * len(all_d1))
-    hist_d2_stim = np.histogram(spikes_d2_stim, bins=stim_bins)[0].astype('float') * 1000. / (binsize * len(all_d2))
+    hist_d1_stim = np.histogram(spikes_d1_stim, bins=stim_bins)[
+        0].astype('float') * 1000. / (binsize * len(all_d1))
+    hist_d2_stim = np.histogram(spikes_d2_stim, bins=stim_bins)[
+        0].astype('float') * 1000. / (binsize * len(all_d2))
 
     hist_d1_bckgrnd = np.histogram(spikes_d1_bckgrnd, bins=bckgrnd_bins)[
         0].astype('float') * 1000. / (binsize * len(all_d1))
@@ -145,8 +151,10 @@ for binsize in binsizes:
         np.random.shuffle(hist_d2_stim_shuf)
         np.random.shuffle(hist_d1_bckgrnd_shuf)
         np.random.shuffle(hist_d2_bckgrnd_shuf)
-        temp_stim.append(correlate2(hist_d1_stim_shuf, hist_d2_stim_shuf)[1, 0])
-        temp_bckgrnd.append(correlate2(hist_d1_bckgrnd_shuf, hist_d2_bckgrnd_shuf)[1, 0])
+        temp_stim.append(correlate2(
+            hist_d1_stim_shuf, hist_d2_stim_shuf)[1, 0])
+        temp_bckgrnd.append(correlate2(
+            hist_d1_bckgrnd_shuf, hist_d2_bckgrnd_shuf)[1, 0])
     cc_stim_shuff.append(np.mean(temp_stim))
     cc_stim_shuff_var.append(np.std(temp_stim))
 
@@ -171,19 +179,23 @@ for x in ax.get_yticklabels():
 
 
 ax = fig.add_subplot(2, 1, 2)
-ax.plot(binsizes, cc_stim, '.-', label='stimulation', color=colors[1], markersize=20.)
+ax.plot(binsizes, cc_stim, '.-', label='stimulation',
+        color=colors[1], markersize=20.)
 ax.fill_between(binsizes, np.array(cc_stim) - np.array(cc_stim_var),
                 np.array(cc_stim) + np.array(cc_stim_var), color=colors[1], alpha=0.2)
 
-ax.plot(binsizes, cc_stim_shuff, '.--', label='stimulation-shuffled', color=colors[2], markersize=20.)
+ax.plot(binsizes, cc_stim_shuff, '.--', label='stimulation-shuffled',
+        color=colors[2], markersize=20.)
 ax.fill_between(binsizes, np.array(cc_stim_shuff) - np.array(cc_stim_shuff_var),
                 np.array(cc_stim_shuff) + np.array(cc_stim_shuff_var), color=colors[2], alpha=0.2)
 
-ax.plot(binsizes, cc_bckgrnd, '.-', label='background', color=colors[3], markersize=20.)
+ax.plot(binsizes, cc_bckgrnd, '.-', label='background',
+        color=colors[3], markersize=20.)
 ax.fill_between(binsizes, np.array(cc_bckgrnd) - np.array(cc_bckgrnd_var),
                 np.array(cc_bckgrnd) + np.array(cc_bckgrnd_var), color=colors[3], alpha=0.2)
 
-ax.plot(binsizes, cc_bckgrnd_shuff, '.--', label='background-shuffled', color=colors[4], markersize=20.)
+ax.plot(binsizes, cc_bckgrnd_shuff, '.--',
+        label='background-shuffled', color=colors[4], markersize=20.)
 ax.fill_between(binsizes, np.array(cc_bckgrnd_shuff) - np.array(cc_bckgrnd_shuff_var),
                 np.array(cc_bckgrnd_shuff) + np.array(cc_bckgrnd_shuff_var), color=colors[4], alpha=0.2)
 

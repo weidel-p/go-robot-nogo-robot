@@ -4,8 +4,10 @@
 # LICENSE: Python Software Foundation (http://docs.python.org/license.html)
 
 from matplotlib.offsetbox import AnchoredOffsetbox
+
+
 class AnchoredScaleBar(AnchoredOffsetbox):
-    def __init__(self, transform, size=0, label=None, horizontal = True, style = 'dark', loc=4,
+    def __init__(self, transform, size=0, label=None, horizontal=True, style='dark', loc=4,
                  pad=0.1, borderpad=0.1, sep=2, prop=None, **kwargs):
         """
         Draw a horizontal and/or vertical  bar with the size in data coordinate
@@ -33,16 +35,17 @@ class AnchoredScaleBar(AnchoredOffsetbox):
             textcol = 'w'
         bars = AuxTransformBox(transform)
         endpt = (size, 0) if horizontal else (0, size)
-        art = mpatches.FancyArrowPatch((0, 0), endpt, color = textcol,
-                                       arrowstyle = "|-|", linewidth=2.5)
+        art = mpatches.FancyArrowPatch((0, 0), endpt, color=textcol,
+                                       arrowstyle="|-|", linewidth=2.5)
         bars.add_artist(art)
 
         packer = VPacker if horizontal else HPacker
-        bars = packer(children=[bars, TextArea(label, dict(color = textcol, size=20.), minimumdescent=False)],
-                       align="center", pad=0, sep=sep)
+        bars = packer(children=[bars, TextArea(label, dict(color=textcol, size=20.), minimumdescent=False)],
+                      align="center", pad=0, sep=sep)
 
         AnchoredOffsetbox.__init__(self, loc, pad=pad, borderpad=borderpad,
                                    child=bars, prop=prop, frameon=False, **kwargs)
+
 
 def add_scalebar(ax, matchx=True, matchy=True, hidex=True, hidey=True, **kwargs):
     """ Add scalebars to axes
@@ -60,19 +63,21 @@ def add_scalebar(ax, matchx=True, matchy=True, hidex=True, hidey=True, **kwargs)
     """
     def f(axis):
         l = axis.get_majorticklocs()
-        return len(l)>1 and (l[1] - l[0])
-    
+        return len(l) > 1 and (l[1] - l[0])
+
     if matchx:
         kwargs['sizex'] = f(ax.xaxis)
         kwargs['labelx'] = str(kwargs['sizex'])
     if matchy:
         kwargs['sizey'] = f(ax.yaxis)
         kwargs['labely'] = str(kwargs['sizey'])
-        
+
     sb = AnchoredScaleBar(ax.transData, **kwargs)
     ax.add_artist(sb)
 
-    if hidex : ax.xaxis.set_visible(False)
-    if hidey : ax.yaxis.set_visible(False)
+    if hidex:
+        ax.xaxis.set_visible(False)
+    if hidey:
+        ax.yaxis.set_visible(False)
 
     return sb

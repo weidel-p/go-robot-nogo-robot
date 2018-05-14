@@ -8,7 +8,7 @@ import pickle
 import pdb
 import sys
 sys.path.append(os.path.join(os.path.dirname(
-    __file__), '..', 'striatal_model/'))
+    __file__), '..', 'two_hemisphere_model/'))
 import params as p
 import json
 import matplotlib.pyplot as pl
@@ -19,7 +19,8 @@ from pylab import *
 import colors
 
 
-colors.seaborn.set_context('paper', font_scale=3.0, rc={"lines.linewidth": 1.5})
+colors.seaborn.set_context('paper', font_scale=3.0,
+                           rc={"lines.linewidth": 1.5})
 colors.seaborn.set_style('whitegrid', {"axes.linewidth": 1.5})
 
 # def channelHistogram(fn, dirname, hemis):       # Also calculate the within and between channel signal-noise-ratio
@@ -43,7 +44,7 @@ else:
         hemisphere_neuron_ids = json.load(f)
 # This is to separate the times of activity with and without external input
 if experiment == 'sequencesMultTrials.yaml' or experiment == 'sequencesMultTrialsd2.yaml':
-    with open("code/striatal_model/experiments/{}".format(experiment), 'r') as ymlfile:
+    with open("code/two_hemisphere_model/experiments/{}".format(experiment), 'r') as ymlfile:
         cfg = yaml.load(ymlfile)
 
     for i, c in enumerate(cfg['stim-params']):
@@ -75,7 +76,8 @@ subFigsHands = []
 maxYVals = []
 for i, channel in enumerate(hemisphere_neuron_ids['channels']):
 
-    ax = fig.add_subplot(p.grid_size[0][0] + 1, p.grid_size[0][1], i + 1)  # Making grid plot instead of all rows plot
+    # Making grid plot instead of all rows plot
+    ax = fig.add_subplot(p.grid_size[0][0] + 1, p.grid_size[0][1], i + 1)
 
     subFigsHands.append(ax)
     binsize = 200.          # Different bin size for individual channel histograms, to see better
@@ -85,7 +87,8 @@ for i, channel in enumerate(hemisphere_neuron_ids['channels']):
     channel_spike_data = np.array([])
 
     # get spikes for this channel
-    mask = np.hstack([np.where(n_id == all_senders)[0] for n_id in channel_n_ids])
+    mask = np.hstack([np.where(n_id == all_senders)[0]
+                      for n_id in channel_n_ids])
     channel_spike_senders = all_senders[mask]
     channel_spike_times = all_spike_times[mask]
 
@@ -106,7 +109,8 @@ for i, channel in enumerate(hemisphere_neuron_ids['channels']):
         ax.spines['bottom'].set_edgecolor('black')
 
         if hemis == 'right':
-            signalD1.append(hist[0] / float(len(channel_n_ids) * binsizeInSecs))
+            signalD1.append(
+                hist[0] / float(len(channel_n_ids) * binsizeInSecs))
             if experiment == 'sequencesMultTrials.yaml' or experiment == 'sequencesMultTrialsd2.yaml':
                 currStart = 500.
                 for start, stop in zip(start_times, stop_times):
@@ -131,7 +135,8 @@ for i, channel in enumerate(hemisphere_neuron_ids['channels']):
         ax.spines['bottom'].set_edgecolor('orange')
 
         if hemis == 'left':
-            signalD1.append(hist[0] / float(len(channel_n_ids) * binsizeInSecs))
+            signalD1.append(
+                hist[0] / float(len(channel_n_ids) * binsizeInSecs))
             if experiment == 'sequencesMultTrials.yaml' or experiment == 'sequencesMultTrialsd2.yaml':
                 for start, stop in zip(start_times, stop_times):
                     currStart = stop + 500.
@@ -147,9 +152,11 @@ for i, channel in enumerate(hemisphere_neuron_ids['channels']):
         ax.plot(hist[1][:-1], hist[0] / float(len(channel_n_ids) * binsizeInSecs),
                 linewidth=1.0, color=colors.colors[0], alpha=1.0)
         if hemis == 'right' and (channel['row'] == 2 or channel['col'] == 2):
-            neighborD1.append(hist[0] / float(len(channel_n_ids) * binsizeInSecs))
+            neighborD1.append(
+                hist[0] / float(len(channel_n_ids) * binsizeInSecs))
         elif hemis == 'left' and (channel['row'] == 2 or channel['col'] == 3):
-            neighborD1.append(hist[0] / float(len(channel_n_ids) * binsizeInSecs))
+            neighborD1.append(
+                hist[0] / float(len(channel_n_ids) * binsizeInSecs))
         else:
             noiseD1.append(hist[0] / float(len(channel_n_ids) * binsizeInSecs))
 
@@ -159,7 +166,8 @@ for i, channel in enumerate(hemisphere_neuron_ids['channels']):
     channel_spike_data = np.array([])
 
     # get spikes for this channel
-    mask = np.hstack([np.where(n_id == all_senders)[0] for n_id in channel_n_ids])
+    mask = np.hstack([np.where(n_id == all_senders)[0]
+                      for n_id in channel_n_ids])
     channel_spike_senders = all_senders[mask]
     channel_spike_times = all_spike_times[mask]
 
@@ -179,7 +187,8 @@ for i, channel in enumerate(hemisphere_neuron_ids['channels']):
         ax.spines['bottom'].set_edgecolor('orange')
 
         if hemis == 'left':
-            signalD2.append(hist[0] / float(len(channel_n_ids) * binsizeInSecs))
+            signalD2.append(
+                hist[0] / float(len(channel_n_ids) * binsizeInSecs))
             if experiment == 'sequencesMultTrials.yaml' or experiment == 'sequencesMultTrialsd2.yaml':
                 for start, stop in zip(start_times, stop_times):
                     currStart = stop + 500.
@@ -204,7 +213,8 @@ for i, channel in enumerate(hemisphere_neuron_ids['channels']):
         ax.spines['bottom'].set_edgecolor('black')
 
         if hemis == 'right':
-            signalD2.append(hist[0] / float(len(channel_n_ids) * binsizeInSecs))
+            signalD2.append(
+                hist[0] / float(len(channel_n_ids) * binsizeInSecs))
             if experiment == 'sequencesMultTrials.yaml' or experiment == 'sequencesMultTrialsd2.yaml':
                 currStart = 500.
                 for start, stop in zip(start_times, stop_times):
@@ -221,9 +231,11 @@ for i, channel in enumerate(hemisphere_neuron_ids['channels']):
         ax.plot(hist[1][:-1], hist[0] / float(len(channel_n_ids) * binsizeInSecs),
                 linewidth=1.0, color=colors.colors[1], alpha=1.0)
         if hemis == 'right' and (channel['row'] == 2 or channel['col'] == 2):
-            neighborD2.append(hist[0] / float(len(channel_n_ids) * binsizeInSecs))
+            neighborD2.append(
+                hist[0] / float(len(channel_n_ids) * binsizeInSecs))
         elif hemis == 'left' and (channel['row'] == 2 or channel['col'] == 3):
-            neighborD2.append(hist[0] / float(len(channel_n_ids) * binsizeInSecs))
+            neighborD2.append(
+                hist[0] / float(len(channel_n_ids) * binsizeInSecs))
         else:
             noiseD2.append(hist[0] / float(len(channel_n_ids) * binsizeInSecs))
 
@@ -254,7 +266,8 @@ for ax in subFigsHands:
 binsize = 200.
 binning = np.arange(0, p.runtime, binsize)
 
-ax = plt.subplot2grid((p.grid_size[0][0] + 1, p.grid_size[0][1]), (p.grid_size[0][0], 0), colspan=p.grid_size[0][1])
+ax = plt.subplot2grid((p.grid_size[0][0] + 1, p.grid_size[0][1]),
+                      (p.grid_size[0][0], 0), colspan=p.grid_size[0][1])
 hist = np.histogram(all_d1_spikes, bins=binning)
 ax.plot(hist[1][:-1], hist[0] / float(len(channel_n_ids) * p.num_channels * binsizeInSecs),
         label="all_D1", color=colors.colors[0])  # Assuming all channels are equal size

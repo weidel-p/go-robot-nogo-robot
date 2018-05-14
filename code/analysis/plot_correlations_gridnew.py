@@ -7,7 +7,7 @@ import pylab as pl
 import sys
 import json
 import yaml
-sys.path.append("code/striatal_model")
+sys.path.append("code/two_hemisphere_model")
 import params
 from colors import colors
 from plot_tools2 import *
@@ -55,18 +55,24 @@ if hemisphere == 'right':
 
 exp_filter = np.exp(np.arange(0, 5, 0.001) / -0.3)
 
-spike_masks_center_d1 = get_spikes_mask(senders, times, channels[center_channel]['d1'])
+spike_masks_center_d1 = get_spikes_mask(
+    senders, times, channels[center_channel]['d1'])
 filtered_spikes_center_d1 = filter_spikes(spike_masks_center_d1, exp_filter)
 
-filtered_spikes_center_d1_stim = np.array(filtered_spikes_center_d1)[:, np.where(stim_times == 1)[0]]
-filtered_spikes_center_d1_bckgrnd = np.array(filtered_spikes_center_d1)[:, np.where(bckgrnd_times == 1)[0]]
+filtered_spikes_center_d1_stim = np.array(filtered_spikes_center_d1)[
+    :, np.where(stim_times == 1)[0]]
+filtered_spikes_center_d1_bckgrnd = np.array(filtered_spikes_center_d1)[
+    :, np.where(bckgrnd_times == 1)[0]]
 
 
-spike_masks_center_d2 = get_spikes_mask(senders, times, channels[center_channel]['d2'])
+spike_masks_center_d2 = get_spikes_mask(
+    senders, times, channels[center_channel]['d2'])
 filtered_spikes_center_d2 = filter_spikes(spike_masks_center_d2, exp_filter)
 
-filtered_spikes_center_d2_stim = np.array(filtered_spikes_center_d2)[:, np.where(stim_times == 1)[0]]
-filtered_spikes_center_d2_bckgrnd = np.array(filtered_spikes_center_d2)[:, np.where(bckgrnd_times == 1)[0]]
+filtered_spikes_center_d2_stim = np.array(filtered_spikes_center_d2)[
+    :, np.where(stim_times == 1)[0]]
+filtered_spikes_center_d2_bckgrnd = np.array(filtered_spikes_center_d2)[
+    :, np.where(bckgrnd_times == 1)[0]]
 plt.rcParams["axes.axisbelow"] = False
 
 fig_stim = pl.figure("stim", figsize=[16, 5])
@@ -102,15 +108,20 @@ for chan_id, channel in enumerate(channels):
 
 
 #  each channels
-cc_d1_stim = correlate2(filtered_spikes_d1_stim, filtered_spikes_d1_stim, 2)    #
+cc_d1_stim = correlate2(filtered_spikes_d1_stim,
+                        filtered_spikes_d1_stim, 2)    #
 cc_d2_stim = correlate2(filtered_spikes_d2_stim, filtered_spikes_d2_stim, 2)
 cc_d1_d2_stim = correlate2(filtered_spikes_d1_stim, filtered_spikes_d2_stim, 2)
 
-cc_d1_bckgrnd = correlate2(filtered_spikes_d1_bckgrnd, filtered_spikes_d1_bckgrnd, 2)
-cc_d2_bckgrnd = correlate2(filtered_spikes_d2_bckgrnd, filtered_spikes_d2_bckgrnd, 2)
-cc_d1_d2_bckgrnd = correlate2(filtered_spikes_d1_bckgrnd, filtered_spikes_d2_bckgrnd, 2)
+cc_d1_bckgrnd = correlate2(filtered_spikes_d1_bckgrnd,
+                           filtered_spikes_d1_bckgrnd, 2)
+cc_d2_bckgrnd = correlate2(filtered_spikes_d2_bckgrnd,
+                           filtered_spikes_d2_bckgrnd, 2)
+cc_d1_d2_bckgrnd = correlate2(
+    filtered_spikes_d1_bckgrnd, filtered_spikes_d2_bckgrnd, 2)
 
 vmin = -0.2
+#vmax = 0.4
 vmax = 0.4
 gridLen = (params.num_neurons_per_channel * params.num_channels) / step
 gridStep = params.num_neurons_per_channel / step
@@ -128,20 +139,30 @@ farNeighChan = [get_ChanNum_gridPos(x[0], x[1]) for x in farNeigh]
 
 cmap = cm.RdBu_r
 
-if 'no_stim' in experiment_fn or 'sequences.yaml' in experiment_fn or 'sequencesd1d2.yaml' in experiment_fn or 'competingActions.yaml' in experiment_fn or 'competingActionsNoD2Conn.yaml' in experiment_fn:
-    minLim = vmin
-    maxLim = vmax * 1.
-
+if  'sequences.yaml' in experiment_fn or 'sequencesd1d2.yaml' in experiment_fn or 'competingActions.yaml' in experiment_fn or 'competingActionsNoD2Conn.yaml' in experiment_fn or  'bilateral_D2.yaml' in experiment_fn:
+    minLim = -0.3
+    #minLim = -0.2
+    maxLim = 0.3
+    #maxLim = 0.4
+elif 'bilateral_D1.yaml' in experiment_fn or 'no_stim' in experiment_fn :
+    minLim = -0.3
+    maxLim = 0.3
 else:
     minLim = vmin
+    #minLim = -0.2
     maxLim = vmax * 2.
+    #maxLim = 0.4
 
 
-cmap1 = shiftedColorMap(cmap, min_val=minLim, max_val=maxLim, name="shifted_stim")
-cmap = shiftedColorMap(cmap, min_val=vmin, max_val=vmax, name="shifted_bck")
+cmap1 = shiftedColorMap(cmap, min_val=minLim,
+                        max_val=maxLim, name="shifted_stim")
+#cmap = shiftedColorMap(cmap, min_val=vmin, max_val=vmax, name="shifted_bck")
+cmap = shiftedColorMap(cmap, min_val=minLim,
+                       max_val=maxLim, name="shifted_bck")
 
 
-ax_stim11.pcolormesh(cc_d1_stim[:len(cc_d1_stim) / 2, len(cc_d1_stim) / 2:], vmin=minLim, vmax=maxLim, cmap=cmap1)
+ax_stim11.pcolormesh(cc_d1_stim[:len(
+    cc_d1_stim) / 2, len(cc_d1_stim) / 2:], vmin=minLim, vmax=maxLim, cmap=cmap1)
 
 ax_stim11.set_xlabel("D1-MSNs", fontsize=15, fontweight='bold')
 ax_stim11.set_ylabel("D1-MSNs", fontsize=15, fontweight='bold')
@@ -149,7 +170,8 @@ ax_stim11.set_xticks(minor_ticks, minor=True)
 ax_stim11.set_yticks(minor_ticks, minor=True)
 ax_stim11.xaxis.grid(which='minor', b=True, color='k', linestyle=':', linewidth=lw,
                      alpha=0.5)
-ax_stim11.yaxis.grid(which='minor', b=True, color='k', linestyle=':', linewidth=lw, alpha=0.5)
+ax_stim11.yaxis.grid(which='minor', b=True, color='k',
+                     linestyle=':', linewidth=lw, alpha=0.5)
 ax_stim11.set_xlim(100, len(cc_d1_stim) / 2)
 ax_stim11.set_ylim(100, len(cc_d1_stim) / 2)
 
@@ -172,14 +194,17 @@ ax_stim11.add_patch(patches.Rectangle((center_channel * 8, center_channel * 8), 
                                       gridStep, fill=False, edgecolor='black', linewidth=lw * 25, alpha=1.0))
 
 
-ax_stim22.pcolormesh(cc_d2_stim[:len(cc_d2_stim) / 2, len(cc_d2_stim) / 2:], vmin=minLim, vmax=maxLim, cmap=cmap1)
+ax_stim22.pcolormesh(cc_d2_stim[:len(
+    cc_d2_stim) / 2, len(cc_d2_stim) / 2:], vmin=minLim, vmax=maxLim, cmap=cmap1)
 
 ax_stim22.set_xlabel("D2-MSNs", fontsize=15, fontweight='bold')
 ax_stim22.set_ylabel("D2-MSNs", fontsize=15, fontweight='bold')
 ax_stim22.set_xticks(minor_ticks, minor=True)
 ax_stim22.set_yticks(minor_ticks, minor=True)
-ax_stim22.xaxis.grid(which='minor', b=True, color='k', linestyle=':', linewidth=lw, alpha=0.5)
-ax_stim22.yaxis.grid(which='minor', b=True, color='k', linestyle=':', linewidth=lw, alpha=0.5)
+ax_stim22.xaxis.grid(which='minor', b=True, color='k',
+                     linestyle=':', linewidth=lw, alpha=0.5)
+ax_stim22.yaxis.grid(which='minor', b=True, color='k',
+                     linestyle=':', linewidth=lw, alpha=0.5)
 ax_stim22.set_xlim(100, len(cc_d2_stim) / 2)
 ax_stim22.set_ylim(100, len(cc_d2_stim) / 2)
 
@@ -198,8 +223,10 @@ ax_stim12.set_xlabel("D2-MSNs", fontsize=15, fontweight='bold')
 ax_stim12.set_ylabel("D1-MSNs", fontsize=15, fontweight='bold')
 ax_stim12.set_xticks(minor_ticks, minor=True)
 ax_stim12.set_yticks(minor_ticks, minor=True)
-ax_stim12.xaxis.grid(which='minor', b=True, color='k', linestyle=':', linewidth=lw, alpha=0.5)
-ax_stim12.yaxis.grid(which='minor', b=True, color='k', linestyle=':', linewidth=lw, alpha=0.5)
+ax_stim12.xaxis.grid(which='minor', b=True, color='k',
+                     linestyle=':', linewidth=lw, alpha=0.5)
+ax_stim12.yaxis.grid(which='minor', b=True, color='k',
+                     linestyle=':', linewidth=lw, alpha=0.5)
 ax_stim12.set_xlim(100, len(cc_d1_d2_stim) / 2)
 ax_stim12.set_ylim(100, len(cc_d1_d2_stim) / 2)
 
@@ -230,7 +257,8 @@ ax_bckgrnd11.set_ylabel("D1-MSNs", fontsize=15, fontweight='bold')
 ax_bckgrnd11.set_xticks(minor_ticks, minor=True)
 ax_bckgrnd11.set_yticks(minor_ticks, minor=True)
 
-ax_bckgrnd11.grid(which='minor', b=True, color='k', linestyle=':', linewidth=lw, alpha=0.5)
+ax_bckgrnd11.grid(which='minor', b=True, color='k',
+                  linestyle=':', linewidth=lw, alpha=0.5)
 ax_bckgrnd11.set_xlim(100, len(cc_d1_bckgrnd) / 2)
 ax_bckgrnd11.set_ylim(100, len(cc_d1_bckgrnd) / 2)
 ax_bckgrnd11.add_patch(patches.Rectangle((center_channel * 8, center_channel * 8), gridStep,
@@ -254,7 +282,8 @@ ax_bckgrnd22.set_xticks(minor_ticks, minor=True)
 ax_bckgrnd22.set_yticks(minor_ticks, minor=True)
 
 
-ax_bckgrnd22.grid(which='minor', b=True, color='k', linestyle=':', linewidth=lw, alpha=0.5)
+ax_bckgrnd22.grid(which='minor', b=True, color='k',
+                  linestyle=':', linewidth=lw, alpha=0.5)
 ax_bckgrnd22.set_xlim(100, len(cc_d2_bckgrnd) / 2)
 ax_bckgrnd22.set_ylim(100, len(cc_d2_bckgrnd) / 2)
 
@@ -273,7 +302,8 @@ ax_bckgrnd12.set_xlabel("D2-MSNs", fontsize=15, fontweight='bold')
 ax_bckgrnd12.set_ylabel("D1-MSNs", fontsize=15, fontweight='bold')
 ax_bckgrnd12.set_xticks(minor_ticks, minor=True)
 ax_bckgrnd12.set_yticks(minor_ticks, minor=True)
-ax_bckgrnd12.grid(which='minor', b=True, color='k', linestyle=':', linewidth=lw, alpha=0.5)
+ax_bckgrnd12.grid(which='minor', b=True, color='k',
+                  linestyle=':', linewidth=lw, alpha=0.5)
 ax_bckgrnd12.set_xlim(100, len(cc_d1_d2_bckgrnd) / 2)
 ax_bckgrnd12.set_ylim(100, len(cc_d1_d2_bckgrnd) / 2)
 

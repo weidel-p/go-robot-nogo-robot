@@ -8,7 +8,7 @@ import seaborn
 import sys
 import json
 import yaml
-sys.path.append("code/striatal_model")
+sys.path.append("code/two_hemisphere_model")
 import params
 from colors import colors
 from plot_tools2 import *
@@ -55,8 +55,10 @@ selected_neurons = np.random.choice(unique_senders, 500, replace=False)
 spikes = get_spikes_mask(senders, times, selected_neurons)
 filtered_spikes = filter_spikes(spikes, exp_filter)
 
-filtered_spikes_stim = np.array(filtered_spikes)[:, np.where(stim_times == 1)[0]]
-filtered_spikes_bckgrnd = np.array(filtered_spikes)[:, np.where(bckgrnd_times == 1)[0]]
+filtered_spikes_stim = np.array(filtered_spikes)[
+    :, np.where(stim_times == 1)[0]]
+filtered_spikes_bckgrnd = np.array(filtered_spikes)[
+    :, np.where(bckgrnd_times == 1)[0]]
 
 correlations_stim = correlate(filtered_spikes_stim)
 correlations_bckgrnd = correlate(filtered_spikes_bckgrnd)
@@ -74,34 +76,42 @@ for i, n0 in enumerate(selected_neurons):
         if dist < 1.:
             if cell_type_n0 == 'd1' and cell_type_n1 == 'd1':
                 cc_by_dist['d1d1_within_stim'].append(correlations_stim[i, j])
-                cc_by_dist['d1d1_within_bckgrnd'].append(correlations_bckgrnd[i, j])
+                cc_by_dist['d1d1_within_bckgrnd'].append(
+                    correlations_bckgrnd[i, j])
             elif cell_type_n0 == 'd2' and cell_type_n1 == 'd2':
                 cc_by_dist['d2d2_within_stim'].append(correlations_stim[i, j])
-                cc_by_dist['d2d2_within_bckgrnd'].append(correlations_bckgrnd[i, j])
+                cc_by_dist['d2d2_within_bckgrnd'].append(
+                    correlations_bckgrnd[i, j])
             elif cell_type_n0 == 'd1' and cell_type_n1 == 'd2':
                 cc_by_dist['d1d2_within_stim'].append(correlations_stim[i, j])
-                cc_by_dist['d1d2_within_bckgrnd'].append(correlations_bckgrnd[i, j])
+                cc_by_dist['d1d2_within_bckgrnd'].append(
+                    correlations_bckgrnd[i, j])
         elif dist < 2.:
             if cell_type_n0 == 'd1' and cell_type_n1 == 'd1':
                 cc_by_dist['d1d1_near_stim'].append(correlations_stim[i, j])
-                cc_by_dist['d1d1_near_bckgrnd'].append(correlations_bckgrnd[i, j])
+                cc_by_dist['d1d1_near_bckgrnd'].append(
+                    correlations_bckgrnd[i, j])
             elif cell_type_n0 == 'd2' and cell_type_n1 == 'd2':
                 cc_by_dist['d2d2_near_stim'].append(correlations_stim[i, j])
-                cc_by_dist['d2d2_near_bckgrnd'].append(correlations_bckgrnd[i, j])
+                cc_by_dist['d2d2_near_bckgrnd'].append(
+                    correlations_bckgrnd[i, j])
             elif cell_type_n0 == 'd1' and cell_type_n1 == 'd2':
                 cc_by_dist['d1d2_near_stim'].append(correlations_stim[i, j])
-                cc_by_dist['d1d2_near_bckgrnd'].append(correlations_bckgrnd[i, j])
+                cc_by_dist['d1d2_near_bckgrnd'].append(
+                    correlations_bckgrnd[i, j])
         else:
             if cell_type_n0 == 'd1' and cell_type_n1 == 'd1':
                 cc_by_dist['d1d1_far_stim'].append(correlations_stim[i, j])
-                cc_by_dist['d1d1_far_bckgrnd'].append(correlations_bckgrnd[i, j])
+                cc_by_dist['d1d1_far_bckgrnd'].append(
+                    correlations_bckgrnd[i, j])
             elif cell_type_n0 == 'd2' and cell_type_n1 == 'd2':
                 cc_by_dist['d2d2_far_stim'].append(correlations_stim[i, j])
-                cc_by_dist['d2d2_far_bckgrnd'].append(correlations_bckgrnd[i, j])
+                cc_by_dist['d2d2_far_bckgrnd'].append(
+                    correlations_bckgrnd[i, j])
             elif cell_type_n0 == 'd1' and cell_type_n1 == 'd2':
                 cc_by_dist['d1d2_far_stim'].append(correlations_stim[i, j])
-                cc_by_dist['d1d2_far_bckgrnd'].append(correlations_bckgrnd[i, j])
-
+                cc_by_dist['d1d2_far_bckgrnd'].append(
+                    correlations_bckgrnd[i, j])
 
 
 fig = pl.figure(figsize=[10, 16])
@@ -142,7 +152,8 @@ for cc_type in cc_by_dist.keys():
     if dist == 'within':
         color = colors[0]
     elif dist == 'near':
-        color = colors[3]       # Trying to different slightly more disparate color schemes
+        # Trying to different slightly more disparate color schemes
+        color = colors[3]
     elif dist == 'far':
         color = colors[1]
 
