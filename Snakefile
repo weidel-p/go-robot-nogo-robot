@@ -101,7 +101,7 @@ rule plot_competing_traces:
         expand('data/{{experiment}}/{trial}/right_hemisphere.gdf', trial=SINGLE_TRIALS),
         expand('data/{{experiment}}/{trial}/neuron_ids_left_hemisphere.json', trial=SINGLE_TRIALS),
         expand('data/{{experiment}}/{trial}/neuron_ids_right_hemisphere.json', trial=SINGLE_TRIALS),
-        'code/two_hemisphere_model/experiments/{experiment}',
+        'code/striatal_model/experiments/{experiment}',
     output:
         'figs/{experiment}/competing_traces.pdf',
     run:
@@ -216,13 +216,13 @@ rule plot_gaba_antagonist_effect:
         expand('data/withGabaAntagonistDoughnut.yaml/{trial}/{{hemi}}_hemisphere.gdf', trial=TRIALS),
         expand('data/withoutGabaAntagonistDoughnut.yaml/{trial}/{{hemi}}_hemisphere.gdf', trial=TRIALS),
         expand('data/withoutGabaAntagonistDoughnut.yaml/{trial}/neuron_ids_{{hemi}}_hemisphere.json', trial=TRIALS),
-        'code/two_hemisphere_model/experiments/withGabaAntagonistDoughnut.yaml',
-        'code/two_hemisphere_model/experiments/withoutGabaAntagonistDoughnut.yaml',
+        'code/striatal_model/experiments/withGabaAntagonistDoughnut.yaml',
+        'code/striatal_model/experiments/withoutGabaAntagonistDoughnut.yaml',
         expand('data/withGabaAntagonistExp.yaml/{trial}/{{hemi}}_hemisphere.gdf', trial=TRIALS),
         expand('data/withoutGabaAntagonistExp.yaml/{trial}/{{hemi}}_hemisphere.gdf', trial=TRIALS),
         expand('data/withoutGabaAntagonistExp.yaml/{trial}/neuron_ids_{{hemi}}_hemisphere.json', trial=TRIALS),
-        'code/two_hemisphere_model/experiments/withGabaAntagonistExp.yaml',
-        'code/two_hemisphere_model/experiments/withoutGabaAntagonistExp.yaml',
+        'code/striatal_model/experiments/withGabaAntagonistExp.yaml',
+        'code/striatal_model/experiments/withoutGabaAntagonistExp.yaml',
     output:
         'figs/withGabaAntagonistDoughnut.yaml/gabaAntagonistEffect{hemi}.pdf',
     run:
@@ -268,7 +268,7 @@ rule plot_raster:
 rule run_experiment:
     threads: 48
     input:
-        'code/two_hemisphere_model/experiments/{experiment}',
+        'code/striatal_model/experiments/{experiment}',
     output:
         'data/{experiment}/{trial}/odom.bag',
         expand('data/{{experiment}}/{{trial}}/left_hemisphere-{thread}.gdf', thread=THREADS),
@@ -286,7 +286,7 @@ rule run_experiment:
 rule run_experiment_long:
     threads: 48
     input:
-        'code/two_hemisphere_model/experiments/{experiment}',
+        'code/striatal_model/experiments/{experiment}',
     output:
         'data_long/{experiment}/{trial}/odom.bag',
         expand('data_long/{{experiment}}/{{trial}}/left_hemisphere-{thread}.gdf', thread=THREADS),
