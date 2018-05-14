@@ -16,7 +16,7 @@ rtf=0.2
   rate_min=100
   rate_max=100
 [nest]
-  binary=./model_ChannelsOnGrid.py
+  binary=./model.py
   args=
   np=1
 [decoder]

@@ -1,132 +1,395 @@
 #!/usr/bin/python
 import numpy as np
 import time
-from params import *
+import params as p
 import nest
 import sys
 import yaml
+import json
+import pdb
 
 from mpi4py import MPI
 comm = MPI.COMM_WORLD
 
+
 with open("cfg.yaml", 'r') as ymlfile:
     cfg = yaml.load(ymlfile)
 
+with open("scale.json", 'r') as f:
+    scale = float(json.load(f)["scale"])
 
-seed = [np.random.randint(0, 9999999)] * num_threads
+with open("trial.json", 'r') as f:
+    trial = float(json.load(f)["trial"])
+
+
+if scale == 1.:
+    folder_ = "data"
+else:
+    folder_ = "data_long"
+
+# If the experiments are with or without GABA antagonist.yaml, freeze the seed to be able to compare the results
+if 'gaba-antagonist-present' in cfg.keys():
+    seed = [int(trial)]*p.num_threads
+    p.bg_noise_d1 = p.bg_noise_d1 * 0.25
+    p.bg_noise_d2 = p.bg_noise_d2 * 0.25
+    if 'kernel' in cfg.keys():
+        if cfg['kernel'] == 'exp':
+            print("CHANGE KERNEL TO EXP")
+            # for exponential kernel we witch within and near connection prob
+            tmp = p.withinChanConnPropScaling
+            p.withinChanConnPropScaling = p.betweenNearChanConnPropScaling
+            p.betweenNearChanConnPropScaling = tmp
+            p.update_conn_params()
+            print "EXP", p.conn_params_d1d1_within_chan
+        else:
+            print "DOUGNUT", p.conn_params_d1d1_within_chan
+else:
+    seed = [np.random.randint(0, 9999999)] * p.num_threads
 print "seed", seed
 nest.ResetKernel()
-nest.SetKernelStatus({"resolution": timestep, "overwrite_files": True,
-                      "rng_seeds": seed, "print_time": False, "local_num_threads": num_threads})
+
+
+nest.SetKernelStatus({"resolution": p.timestep, "overwrite_files": True,
+                      "rng_seeds": seed, "print_time": True, "local_num_threads": p.num_threads})
 
 nest.set_verbosity("M_FATAL")
 
 # copy models
 
-nest.CopyModel("iaf_cond_alpha", "d1", d1_params)
-nest.CopyModel("iaf_cond_alpha", "d2", d2_params)
-
-# nest.CopyModel("dc_generator", "stimulus", params={
-#               "start": start, "stop": stop, "amplitude": stim_amplitude})
+nest.CopyModel("iaf_cond_alpha", "d1", p.d1_params)
+nest.CopyModel("iaf_cond_alpha", "d2", p.d2_params)
 
 
 # Background noise
-noise_d1 = nest.Create("poisson_generator", 1, {"rate": bg_noise_d1})
-noise_d2 = nest.Create("poisson_generator", 1, {"rate": bg_noise_d2})
+noise_d1 = nest.Create("poisson_generator", 1, {"rate": p.bg_noise_d1})
+noise_d2 = nest.Create("poisson_generator", 1, {"rate": p.bg_noise_d2})
+
+
+def connWithinChannels(ch1d1, ch1d2):
+    nest.Connect(ch1d1, ch1d1, p.conn_params_d1d1_within_chan,
+                 p.syn_params_d1d1_within_chan)
+    nest.Connect(ch1d1, ch1d2, p.conn_params_d1d2_within_chan,
+                 p.syn_params_d1d2_within_chan)
+    nest.Connect(ch1d2, ch1d1, p.conn_params_d2d1_within_chan,
+                 p.syn_params_d2d1_within_chan)
+    nest.Connect(ch1d2, ch1d2, p.conn_params_d2d2_within_chan,
+                 p.syn_params_d2d2_within_chan)
+
+
+def connBetweenChannels(ch1d1, ch1d2, ch2d1, ch2d2, which):
+    if which == "Near":  # Is the channel far or near ?
+        nest.Connect(ch1d1, ch2d1, p.conn_params_d1d1_between_near_chan,
+                     p.syn_params_d1d1_between_near_chan)
+        nest.Connect(ch1d1, ch2d2, p.conn_params_d1d2_between_near_chan,
+                     p.syn_params_d1d2_between_near_chan)
+        nest.Connect(ch1d2, ch2d1, p.conn_params_d2d1_between_near_chan,
+                     p.syn_params_d2d1_between_near_chan)
+        nest.Connect(ch1d2, ch2d2, p.conn_params_d2d2_between_near_chan,
+                     p.syn_params_d2d2_between_near_chan)
+    else:
+        nest.Connect(ch1d1, ch2d1, p.conn_params_d1d1_between_far_chan,
+                     p.syn_params_d1d1_between_far_chan)
+        nest.Connect(ch1d1, ch2d2, p.conn_params_d1d2_between_far_chan,
+                     p.syn_params_d1d2_between_far_chan)
+        nest.Connect(ch1d2, ch2d1, p.conn_params_d2d1_between_far_chan,
+                     p.syn_params_d2d1_between_far_chan)
+        nest.Connect(ch1d2, ch2d2, p.conn_params_d2d2_between_far_chan,
+                     p.syn_params_d2d2_between_far_chan)
+
+
+def saveGIDs(data, label):
+
+    with open(label, 'w+') as f:
+        json.dump(data, f)
 
 
 def create_hemisphere(label):
-    d1_turnleft = nest.Create('d1', num_neurons_per_channel)
-    d2_turnleft = nest.Create('d2', num_neurons_per_channel)
-    d1_turnright = nest.Create('d1', num_neurons_per_channel)
-    d2_turnright = nest.Create('d2', num_neurons_per_channel)
 
-    # Connect within channels
-    nest.Connect(d1_turnleft, d1_turnleft,
-                 conn_params_d1d1_within_chan, syn_params_d1d1_within_chan)
-    nest.Connect(d1_turnleft, d2_turnleft,
-                 conn_params_d1d2_within_chan, syn_params_d1d2_within_chan)
-    nest.Connect(d2_turnleft, d1_turnleft,
-                 conn_params_d2d1_within_chan, syn_params_d2d1_within_chan)
-    nest.Connect(d2_turnleft, d2_turnleft,
-                 conn_params_d2d2_within_chan, syn_params_d2d2_within_chan)
-
-    nest.Connect(d1_turnright, d1_turnright,
-                 conn_params_d1d1_within_chan, syn_params_d1d1_within_chan)
-    nest.Connect(d1_turnright, d2_turnright,
-                 conn_params_d1d2_within_chan, syn_params_d1d2_within_chan)
-    nest.Connect(d2_turnright, d1_turnright,
-                 conn_params_d2d1_within_chan, syn_params_d2d1_within_chan)
-    nest.Connect(d2_turnright, d2_turnright,
-                 conn_params_d2d2_within_chan, syn_params_d2d2_within_chan)
-
-    # Connection between channels
-    nest.Connect(d1_turnleft, d1_turnright,
-                 conn_params_d1d1_between_chan, syn_params_d1d1_between_chan)
-    nest.Connect(d1_turnleft, d2_turnright,
-                 conn_params_d1d2_between_chan, syn_params_d1d2_between_chan)
-    nest.Connect(d2_turnleft, d1_turnright,
-                 conn_params_d2d1_between_chan, syn_params_d2d1_between_chan)
-    nest.Connect(d2_turnleft, d2_turnright,
-                 conn_params_d2d2_between_chan, syn_params_d2d2_between_chan)
-
-    nest.Connect(d1_turnright, d1_turnleft,
-                 conn_params_d1d1_between_chan, syn_params_d1d1_between_chan)
-    nest.Connect(d1_turnright, d2_turnleft,
-                 conn_params_d1d2_between_chan, syn_params_d1d2_between_chan)
-    nest.Connect(d2_turnright, d1_turnleft,
-                 conn_params_d2d1_between_chan, syn_params_d2d1_between_chan)
-    nest.Connect(d2_turnright, d2_turnleft,
-                 conn_params_d2d2_between_chan, syn_params_d2d2_between_chan)
-
-    nest.Connect(noise_d1, d1_turnleft + d1_turnright, syn_spec={
-                 "weight": bg_weight_d1, "delay": 1.})
-    nest.Connect(noise_d2, d2_turnleft + d2_turnright, syn_spec={
-                 "weight": bg_weight_d2, "delay": 1.})
-
+    # create spike detector
     sd = nest.Create("spike_detector", 1, {
                      "to_file": True, 'label': label, "use_gid_in_filename": False})
 
-    nest.Connect(d1_turnleft + d2_turnleft + d1_turnright + d2_turnright, sd)
+    # create all channel neurons
+    channels = []
+    for i in range(p.num_channels):
+        # position in the grid
+        row = i / p.grid_size[0][0]
+        col = i % p.grid_size[0][1]
+        channels.append({'d1': nest.Create('d1', p.num_neurons_per_channel),
+                         'd2': nest.Create('d2', p.num_neurons_per_channel), 'row': row, 'col': col})
 
-    return {"d1_turnleft": d1_turnleft, "d2_turnleft": d2_turnleft, "d1_turnright": d1_turnright, "d2_turnright": d2_turnright, "spike_detector": sd}
+    for i, c0 in enumerate(channels):
+
+        # connect background noise
+        nest.Connect(noise_d1, c0['d1'], syn_spec={
+                     "weight": p.bg_weight_d1, "delay": 1.})
+        nest.Connect(noise_d2, c0['d2'], syn_spec={
+                     "weight": p.bg_weight_d2, "delay": 1.})
+
+        # connect to sd
+        nest.Connect(c0['d1'] + c0['d2'], sd)
+
+        # To prevent connecting the two channels twice
+        flags = np.zeros((p.grid_size[0]))
+
+        # connect within channel
+        connWithinChannels(c0['d1'], c0['d2'])
+
+        # connect between channels - first near ones, which are all of those for which row and cols differ by 1
+        srcRow = c0['row']
+        srcCol = c0['col']
+        flags[srcRow][srcCol] = 1  # Because of the connWithinChannels
+        for j in xrange(8):  # There are 8 near connections around every channel
+            if j == 0:
+                destRow = srcRow + 1
+                destCol = srcCol
+            if j == 1:
+                destRow = srcRow
+                destCol = srcCol + 1
+            if j == 2:
+                destRow = srcRow + 1
+                destCol = srcCol + 1
+            if j == 3:
+                destRow = srcRow - 1
+                destCol = srcCol
+            if j == 4:
+                destRow = srcRow
+                destCol = srcCol - 1
+            if j == 5:
+                destRow = srcRow - 1
+                destCol = srcCol - 1
+            if j == 6:
+                destRow = srcRow - 1
+                destCol = srcCol + 1
+            if j == 7:
+                destRow = srcRow + 1
+                destCol = srcCol - 1
+
+            # Trying to wrap up the grid
+            if destRow < 0:
+                destRow = p.grid_size[0][0] - 1
+            if destCol < 0:
+                destCol = p.grid_size[0][1] - 1
+            if destRow > p.grid_size[0][0] - 1:
+                destRow = 0
+            if destCol > p.grid_size[0][1] - 1:
+                destCol = 0
+            for dest in channels:
+                if dest['row'] == destRow and dest['col'] == destCol and flags[destRow][destCol] == 0:
+                    connBetweenChannels(
+                        c0['d1'], c0['d2'], dest['d1'], dest['d2'], 'Near')
+                    flags[destRow][destCol] = 1
+
+        # Now connecting the farther channels
+        for j, c1 in enumerate(channels):
+            if np.abs(c1['row'] - c0['row']) > 1 or np.abs(c1['col'] - c0['col']) > 1 and flags[c1['row']][c1['col']] == 0:
+                # far channels
+                connBetweenChannels(c0['d1'], c0['d2'],
+                                    c1['d1'], c1['d2'], 'Far')
+
+                flags[c1['row']][c1['col']] = 1
+
+    return {'channels': channels, 'spike_detector': sd}
 
 
 # CREATE HEMISPHERES
 
-left_hemisphere = create_hemisphere("../../data/left_hemisphere")
-right_hemisphere = create_hemisphere("../../data/right_hemisphere")
+left_hemisphere = create_hemisphere("../../{}/left_hemisphere".format(folder_))
+right_hemisphere = create_hemisphere(
+    "../../{}/right_hemisphere".format(folder_))
 
+
+try:
+    if cfg["inter-hemisphere-connection"]:
+        # Connect D1s of both hemisperes - refer to Cui at al , D1 of ipsilateral hemisphere decreases during contralateral movement
+        d1sLeft = [y for x in left_hemisphere['channels'] for y in x['d1']]
+        d1sRight = [y for x in right_hemisphere['channels'] for y in x['d1']]
+
+        nest.Connect(d1sLeft, d1sRight, conn_spec={'rule': 'fixed_outdegree', 'outdegree': int(
+            p.c_inter_hemis * len(d1sRight))}, syn_spec={"weight": p.j_inter_hemis, "delay": 10})
+        nest.Connect(d1sRight, d1sLeft, conn_spec={'rule': 'fixed_outdegree', 'outdegree': int(
+            p.c_inter_hemis * len(d1sLeft))}, syn_spec={"weight": p.j_inter_hemis, "delay": 10})
+
+        # Connect D2s of both hemisperes - refer to Cui at al , D2 of ipsilateral hemisphere decreases during contralateral movement
+        d2sLeft = [y for x in left_hemisphere['channels'] for y in x['d2']]
+        d2sRight = [y for x in right_hemisphere['channels'] for y in x['d2']]
+
+        nest.Connect(d2sLeft, d2sRight, conn_spec={'rule': 'fixed_outdegree', 'outdegree': int(
+            p.c_inter_hemis * len(d2sRight))}, syn_spec={"weight": p.j_inter_hemis, "delay": 10})
+        nest.Connect(d2sRight, d2sLeft, conn_spec={'rule': 'fixed_outdegree', 'outdegree': int(
+            p.c_inter_hemis * len(d2sLeft))}, syn_spec={"weight": p.j_inter_hemis, "delay": 10})
+except:
+    pass
+
+try:
+    if cfg["cut-D2D2-connections"]:
+        # Connect D1s of both hemisperes - refer to Cui at al , D1 of ipsilateral hemisphere decreases during contralateral movement
+        for chan in left_hemisphere['channels']:
+            if chan['col'] == 4 and chan['row'] == 3:
+                chan_go_right_d2 = chan['d2']
+            if chan['col'] == 3 and chan['row'] == 3:
+                chan_go_left_d2 = chan['d2']
+
+        nest.SetStatus(nest.GetConnections(
+            chan_go_left_d2, chan_go_right_d2), {'weight': 0.})
+        nest.SetStatus(nest.GetConnections(
+            chan_go_right_d2, chan_go_left_d2), {'weight': 0.})
+
+        for chan in right_hemisphere['channels']:
+            if chan['col'] == 4 and chan['row'] == 3:
+                chan_go_right_d2 = chan['d2']
+            if chan['col'] == 3 and chan['row'] == 3:
+                chan_go_left_d2 = chan['d2']
+
+        nest.SetStatus(nest.GetConnections(
+            chan_go_left_d2, chan_go_right_d2), {'weight': 0.})
+        nest.SetStatus(nest.GetConnections(
+            chan_go_right_d2, chan_go_left_d2), {'weight': 0.})
+except:
+    pass
+
+try:
+    if cfg["gaba-antagonist-present"]:
+        d1sLeft = [y for x in left_hemisphere['channels'] for y in x['d1']]
+        d1sRight = [y for x in right_hemisphere['channels'] for y in x['d1']]
+        d2sLeft = [y for x in left_hemisphere['channels'] for y in x['d2']]
+        d2sRight = [y for x in right_hemisphere['channels'] for y in x['d2']]
+        # Reduce all inhibitiory connections by 0.5 to simulate gabazine effect
+        print "Reducing all GABAergic conenctions"
+        nest.SetStatus(nest.GetConnections(
+            d1sLeft, d1sLeft), {'weight': p.jd1d1*0.20})
+        nest.SetStatus(nest.GetConnections(
+            d1sLeft, d2sLeft), {'weight': p.jd1d2*0.20})
+        nest.SetStatus(nest.GetConnections(
+            d2sLeft, d1sLeft), {'weight': p.jd2d1*0.20})
+        nest.SetStatus(nest.GetConnections(
+            d2sLeft, d2sLeft), {'weight': p.jd2d2*0.20})
+
+        nest.SetStatus(nest.GetConnections(
+            d1sRight, d1sRight), {'weight': p.jd1d1*0.20})
+        nest.SetStatus(nest.GetConnections(
+            d1sRight, d2sRight), {'weight': p.jd1d2*0.20})
+        nest.SetStatus(nest.GetConnections(
+            d2sRight, d1sRight), {'weight': p.jd2d1*0.20})
+        nest.SetStatus(nest.GetConnections(
+            d2sRight, d2sRight), {'weight': p.jd2d2*0.20})
+except:
+    pass
+
+
+# Save GIDs for later
+saveGIDs(left_hemisphere, "../../{}/neuron_ids_left_hemisphere.json".format(folder_))
+saveGIDs(right_hemisphere,
+         "../../{}/neuron_ids_right_hemisphere.json".format(folder_))
+
+
+# CREATE STIM
 
 for s in cfg["stim-params"]:
-    stim = nest.Create("dc_generator", 1, {
-                       "start": start, "stop": stop, "amplitude": s["amplitude"]})
-    if s["hemisphere"] == "left":
-        if s["cell-type"] == "D1":
-            nest.Connect(stim, left_hemisphere["d1_turnleft"] +
-                         left_hemisphere["d1_turnright"], syn_spec={"weight": bg_weight_d1})
-        if s["cell-type"] == "D2":
-            nest.Connect(stim, left_hemisphere["d2_turnleft"] +
-                         left_hemisphere["d2_turnright"], syn_spec={"weight": bg_weight_d2})
-    if s["hemisphere"] == "right":
-        if s["cell-type"] == "D1":
-            nest.Connect(stim, right_hemisphere["d1_turnleft"] +
-                         right_hemisphere["d1_turnright"], syn_spec={"weight": bg_weight_d1})
-        if s["cell-type"] == "D2":
-            nest.Connect(stim, right_hemisphere["d2_turnleft"] +
-                         right_hemisphere["d2_turnright"], syn_spec={"weight": bg_weight_d2})
+    if s['hemisphere'] == 'none':
+        # no stimulation, only background input
+        pass
+    else:
+        num_stimulations = len(s['start_times'])
+        for i in range(num_stimulations):
+            start_time = s['start_times'][i]
+            stop_time = s['stop_times'][i]
+            amplitude = s['amplitude']
+            hemisphere = s['hemisphere']
+            targets = s['targets'][i]
+            cell_type = s['cell-type']
 
+            # Check whether the stim-type is "rate" or "current"
+            if cfg["stim-type"] == "current": 
+                stim = nest.Create("dc_generator", 1, {"start": start_time * scale, "stop": stop_time * scale, "amplitude": amplitude})
+            elif cfg["stim-type"] == "rate":
+                stim = nest.Create("poisson_generator",1,{"rate":amplitude, "start": start_time * scale, "stop": stop_time * scale })
+
+
+            if hemisphere == 'left':
+                channels_in_hemi = left_hemisphere['channels']
+            elif hemisphere == 'right':
+                channels_in_hemi = right_hemisphere['channels']
+
+            if targets[0][0] == 'all':
+
+                # stimulate the whole hemisphere
+                if cell_type == 'D1':
+                    d1_neurons = list(
+                        np.ravel([channels_in_hemi[i]['d1'] for i in range(p.num_channels)]))
+                    nest.Connect(stim, d1_neurons)
+                elif cell_type == 'D2':
+                    d2_neurons = list(
+                        np.ravel([channels_in_hemi[i]['d2'] for i in range(p.num_channels)]))
+                    nest.Connect(stim, d2_neurons)
+                else:
+                    d1_neurons = list(
+                        np.ravel([channels_in_hemi[i]['d1'] for i in range(p.num_channels)]))
+                    d2_neurons = list(
+                        np.ravel([channels_in_hemi[i]['d2'] for i in range(p.num_channels)]))
+                    nest.Connect(stim, d1_neurons + d2_neurons)
+
+            elif targets[0][0] == 'random':
+                # stimulate randomly picked neurons
+                if cell_type == 'both':
+                    if i == 0:  # Dont shuffle the neurons_channum for every dc generator!
+                        d1_neurons = list(
+                            np.ravel([channels_in_hemi[i]['d1'] for i in range(p.num_channels)]))
+                        d2_neurons = list(
+                            np.ravel([channels_in_hemi[i]['d2'] for i in range(p.num_channels)]))
+                        all_neurons = d1_neurons + d2_neurons
+
+                        np.random.seed(0)
+                        stim_neurons = np.random.choice(
+                            all_neurons, cfg['num-stim'])
+
+                    nest.Connect(stim, list(stim_neurons))
+                    # Here the whoel shuffled array is stored instead of first num_stim_gabazine neurons, in order to avoid re-generating the list of ids  without the stimulated neuron ids. During analysis , only first num_stim_gabazine should be read as stimulated and the rest of the list represent gids of unstimulated neurons and should be scanned for coactive neurons
+                if cell_type == 'D1':
+                    print("RANDOM D1 STIM NOT IMPLEMENTED YET")
+                    exit()
+
+                if cell_type == 'D2':
+
+                    if i == 0:  # Dont shuffle the neurons_channum for every dc generator!
+                        d2_neurons = list(np.ravel([channels_in_hemi[i]['d2'] for i in range(p.num_channels)]))
+                        stim_neurons = np.random.choice(d2_neurons, cfg['num-stim'])
+
+                    nest.Connect(stim, list(stim_neurons))
+                    # Here the whoel shuffled array is stored instead of first num_stim_gabazine neurons, in order to avoid re-generating the list of ids  without the stimulated neuron ids. During analysis , only first num_stim_gabazine should be read as stimulated and the rest of the list represent gids of unstimulated neurons and should be scanned for coactive neurons
+            else:
+
+                # stimulate only specific channels
+                for t in targets:
+                    for chan in channels_in_hemi:
+                        if (chan['row'] == t[0] and chan['col'] == t[1]):
+                            # this channel is targeted
+
+                            if cell_type == 'D1':
+                                nest.Connect(stim, chan['d1'])
+                            elif cell_type == 'D2':
+                                nest.Connect(stim, chan['d2'])
+                            else:
+                                nest.Connect(stim, chan['d1']+chan['d2'])
 
 proxy_out = nest.Create('music_event_out_proxy')
 nest.SetStatus(proxy_out, {'port_name': 'out'})
 
-for i in range(100):
-    nest.Connect([right_hemisphere["d1_turnleft"][i]], proxy_out, 'all_to_all', {
-                 'music_channel': i, 'delay': 1.0})  # to_ms(options.music_timestep)})
-for i in range(100):
-    nest.Connect([left_hemisphere["d1_turnright"][i]], proxy_out, 'all_to_all', {
-                 'music_channel': 100 + i, 'delay': 1.0})  # to_ms(options.music_timestep)})
+for i in range(p.num_neurons_per_channel):
+    nest.Connect([right_hemisphere['channels'][3 * p.grid_size[0][1] + 3]['d1'][i]], proxy_out, 'one_to_one', {     # Hardcoded for now, turn left is (3,3)
+        'music_channel': i, 'delay': 1.0})
 
+for i in range(p.num_neurons_per_channel):
+    nest.Connect([right_hemisphere['channels'][3 * p.grid_size[0][1] + 3]['d2'][i]], proxy_out, 'one_to_one', {     # Hardcoded for now, turn left is (3,3)
+        'music_channel': p.num_neurons_per_channel + i, 'delay': 1.0})
+
+for i in range(p.num_neurons_per_channel):
+    nest.Connect([left_hemisphere['channels'][3 * p.grid_size[0][1] + 4]['d1'][i]], proxy_out, 'one_to_one', {
+                 'music_channel': 2 * p.num_neurons_per_channel + i, 'delay': 1.0})
+
+for i in range(p.num_neurons_per_channel):
+    nest.Connect([left_hemisphere['channels'][3 * p.grid_size[0][1] + 4]['d2'][i]], proxy_out, 'one_to_one', {
+                 'music_channel': 3 * p.num_neurons_per_channel + i, 'delay': 1.0})
 
 #####################################
 ##### JUST FOR TECHNICAL RESONS #####
@@ -145,6 +408,6 @@ nest.SetAcceptableLatency('in', 1.0)  # useless?
 comm.Barrier()
 
 t0 = time.time()
-nest.Simulate(runtime)
+nest.Simulate(p.runtime * scale)
 
-print "TIME ELAPSED: ", time.time() - t0, "rtf", runtime / (1000 * (time.time() - t0))
+print "TIME ELAPSED: ", time.time() - t0, "rtf", p.runtime * scale / (1000 * (time.time() - t0))
