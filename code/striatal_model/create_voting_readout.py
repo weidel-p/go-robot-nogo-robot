@@ -60,23 +60,29 @@ def population_voting_readout():
 
 def channel_readout():
 
+    N_D1 = N_D2 = 40
+    S_D1 = 2.0
+    S_D2 = 0.4
+
     go_left = []
     go_right = []
 
     for j in range(160):
 
         if j < 40:  # d1 left
-            go_left.append(1 / 50.)
+            #go_left.append(1 / 50.)
+            go_left.append(S_D1 / N_D1)
             go_right.append(0.)
         elif j < 80:  # d2 left
-            go_left.append(-0.5 / 50.)
+            go_left.append(-S_D2 / N_D2)
             go_right.append(0.)
         elif j < 120:  # d1 right
             go_left.append(0.)
-            go_right.append(1 / 50.)
+            #go_right.append(1 / 50.)
+            go_right.append(S_D1 / N_D1)
         elif j < 160:  # d2 right
             go_left.append(0.)
-            go_right.append(-0.5 / 50.)
+            go_right.append(-S_D2 / N_D2)
 
     weights = [go_left, go_right]
     json.dump(weights, open("channel_readout.dat", "w+"))

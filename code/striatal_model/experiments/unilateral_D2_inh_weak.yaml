@@ -3,6 +3,8 @@ stim-params:
       cell-type: D2
       start_times: [5000.]
       stop_times: [15000.]
-      targets: [[[all]]] 
-      amplitude: 110.
+      targets: [[[random]]] 
+      amplitude: -150.
 stim-type: current
+num-stim: 432 # 30% percent of all D2 neurons 
+

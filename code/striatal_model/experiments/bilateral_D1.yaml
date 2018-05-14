@@ -4,11 +4,11 @@ stim-params:
       start_times: [5000.]
       stop_times: [15000.]
       targets: [[[all]]] 
-      amplitude: 175.
+      amplitude: 115.
     - hemisphere: right 
       cell-type: D1
       start_times: [5000.]
       stop_times: [15000.]
       targets: [[[all]]] 
-      amplitude: 175.
-
+      amplitude: 115.
+stim-type: current

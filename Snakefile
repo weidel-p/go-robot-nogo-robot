@@ -7,8 +7,7 @@ THREADS = range(9)
 
 EXPERIMENTS = [os.path.basename(f) for f in glob.glob('code/striatal_model/experiments/*')]
 SLIDING_EXPERIMENTS = ["no_stim.yaml", "bilateral_D1.yaml", "bilateral_D2.yaml", "sequencesd1d2.yaml"]
-SEQ_MULT_EXPERIMENTS = ["sequencesMultTrials.yaml","sequencesMultTrialsd2.yaml"]
-
+SEQ_MULT_EXPERIMENTS = ["sequences.yaml", "sequencesd2.yaml", "sequencesd1d2.yaml"]
 TRIALS = range(5)
 SINGLE_TRIALS = range(1)
 
@@ -21,11 +20,13 @@ rule all:
     input:
         "figs/competingActions.yaml/competing_traces_left.pdf",
         "figs/competingActions.yaml/competing_traces_right.pdf",
+        "figs/competingActions.yaml/competing_traces.pdf",
         "figs/competingActions.yaml/competing_corr_left.pdf",
         "figs/competingActions.yaml/competing_corr_right.pdf",
 
         "figs/competingActionsNoD2Conn.yaml/competing_traces_left.pdf",
         "figs/competingActionsNoD2Conn.yaml/competing_traces_right.pdf",
+        "figs/competingActionsNoD2Conn.yaml/competing_traces.pdf",
         "figs/competingActionsNoD2Conn.yaml/competing_corr_left.pdf",
         "figs/competingActionsNoD2Conn.yaml/competing_corr_right.pdf",
 
@@ -34,31 +35,13 @@ rule all:
         'figs/competingActions.yaml/competing_corr_change_between_D1D1_left.pdf',
         'figs/competingActions.yaml/competing_corr_change_between_D2D2_right.pdf',
 
-        expand('figs/{experiments}/corr_mean_activity_left.pdf', experiments=EXPERIMENTS),
-        expand('figs/{experiments}/corr_mean_activity_right.pdf', experiments=EXPERIMENTS),
-
         expand('figs/{experiments}/corr_sliding_left.pdf', experiments=SLIDING_EXPERIMENTS),
         expand('figs/{experiments}/corr_sliding_right.pdf', experiments=SLIDING_EXPERIMENTS),
 
         expand("figs/{experiments}/new_corr_with_stim_left.pdf", experiments=EXPERIMENTS),
         expand("figs/{experiments}/new_corr_with_stim_right.pdf", experiments=EXPERIMENTS),
-        expand("figs/{experiments}/new_corr_with_bckgrnd_left.pdf", experiments=EXPERIMENTS),
-        expand("figs/{experiments}/new_corr_with_bckgrnd_right.pdf", experiments=EXPERIMENTS),
-
-        expand("figs/{experiments}/corr_with_stim_left.pdf", experiments=EXPERIMENTS),
-        expand("figs/{experiments}/corr_bw_stim_left.pdf", experiments=EXPERIMENTS),
-        expand("figs/{experiments}/corr_with_stim_right.pdf", experiments=EXPERIMENTS),
-        expand("figs/{experiments}/corr_bw_stim_right.pdf", experiments=EXPERIMENTS),
-        expand("figs/{experiments}/corr_with_bckgrnd_left.pdf", experiments=EXPERIMENTS),
-        expand("figs/{experiments}/corr_bw_bckgrnd_left.pdf", experiments=EXPERIMENTS),
-        expand("figs/{experiments}/corr_with_bckgrnd_right.pdf", experiments=EXPERIMENTS),
-        expand("figs/{experiments}/corr_bw_bckgrnd_right.pdf", experiments=EXPERIMENTS),
-
-        expand("figs/{experiments}/corr_left.pdf", experiments=EXPERIMENTS),
-        expand("figs/{experiments}/corr_right.pdf", experiments=EXPERIMENTS),
 
         expand("figs/{experiments}/trajectory.pdf", experiments=EXPERIMENTS),
-        expand("figs/{experiments}/turnpoints.pdf", experiments=EXPERIMENTS),
         
         expand("figs/{experiments}/raster_plot_left_hemisphere.pdf", experiments=EXPERIMENTS),
         expand("figs/{experiments}/raster_plot_right_hemisphere.pdf", experiments=EXPERIMENTS),
@@ -71,12 +54,14 @@ rule all:
 
         expand("figs/{experiments}/changeAct.pdf", experiments=SEQ_MULT_EXPERIMENTS),
 
+        'figs/withGabaAntagonistDoughnut.yaml/gabaAntagonistEffectleft.pdf',
+        'figs/withGabaAntagonistDoughnut.yaml/gabaAntagonistEffectright.pdf',
 
 rule clean:
     shell:
         """
-        rm -r {}*
-        """.format(DATA_PATH)
+        rm -r {}* {}*
+        """.format(DATA_PATH, "data_long/")
 
 rule cleanFigs:
     shell:
@@ -103,6 +88,19 @@ rule plot_competing_change_CC:
     run:
         shell('ipython -c "%run code/analysis/plot_competing_correlations_change.py {input} {output}"')
 
+
+
+rule plot_competing_traces:
+    input:
+        expand('data/{{experiment}}/{trial}/left_hemisphere.gdf', trial=SINGLE_TRIALS),
+        expand('data/{{experiment}}/{trial}/right_hemisphere.gdf', trial=SINGLE_TRIALS),
+        expand('data/{{experiment}}/{trial}/neuron_ids_left_hemisphere.json', trial=SINGLE_TRIALS),
+        expand('data/{{experiment}}/{trial}/neuron_ids_right_hemisphere.json', trial=SINGLE_TRIALS),
+        'code/two_hemisphere_model/experiments/{experiment}',
+    output:
+        'figs/{experiment}/competing_traces.pdf',
+    run:
+        shell('ipython -c "%run code/analysis/plot_competing_traces.py {input} {output}"')
 
 
 rule plot_competing_CC:
@@ -193,22 +191,37 @@ rule plot_trajectories:
         'code/striatal_model/experiments/{experiment}',
     output:
         'figs/{experiment}/trajectory.pdf',
-        'figs/{experiment}/turnpoints.pdf',
     run:
         shell('ipython -c "%run code/analysis/trajectory_plotter.py {input} {output}"')
 
 rule plot_activityChange_MultTrials:
     input:
-        expand('data/{{experiment}}/{trial}/left_hemisphere.gdf', trial=SINGLE_TRIALS),
-        expand('data/{{experiment}}/{trial}/right_hemisphere.gdf', trial=SINGLE_TRIALS),
-        expand('data/{{experiment}}/{trial}/neuron_ids_left_hemisphere.json', trial=SINGLE_TRIALS),
-        expand('data/{{experiment}}/{trial}/neuron_ids_right_hemisphere.json', trial=SINGLE_TRIALS),
+        expand('data/{{experiment}}/{trial}/left_hemisphere.gdf', trial=TRIALS),
+        expand('data/{{experiment}}/{trial}/right_hemisphere.gdf', trial=TRIALS),
+        expand('data/{{experiment}}/{trial}/neuron_ids_left_hemisphere.json', trial=TRIALS),
+        expand('data/{{experiment}}/{trial}/neuron_ids_right_hemisphere.json', trial=TRIALS),
         'code/striatal_model/experiments/{experiment}',
     output:
         'figs/{experiment}/changeAct.pdf',
     run:
-        shell('ipython -c "%run code/analysis/plot_changeActivity_multTrials.py {input} {output}"')
+        shell('ipython -c "%run code/analysis/plot_activity_change.py {input} {output}"')
 
+rule plot_gaba_antagonist_effect:
+    input:
+        expand('data/withGabaAntagonistDoughnut.yaml/{trial}/{{hemi}}_hemisphere.gdf', trial=TRIALS),
+        expand('data/withoutGabaAntagonistDoughnut.yaml/{trial}/{{hemi}}_hemisphere.gdf', trial=TRIALS),
+        expand('data/withoutGabaAntagonistDoughnut.yaml/{trial}/neuron_ids_{{hemi}}_hemisphere.json', trial=TRIALS),
+        'code/two_hemisphere_model/experiments/withGabaAntagonistDoughnut.yaml',
+        'code/two_hemisphere_model/experiments/withoutGabaAntagonistDoughnut.yaml',
+        expand('data/withGabaAntagonistExp.yaml/{trial}/{{hemi}}_hemisphere.gdf', trial=TRIALS),
+        expand('data/withoutGabaAntagonistExp.yaml/{trial}/{{hemi}}_hemisphere.gdf', trial=TRIALS),
+        expand('data/withoutGabaAntagonistExp.yaml/{trial}/neuron_ids_{{hemi}}_hemisphere.json', trial=TRIALS),
+        'code/two_hemisphere_model/experiments/withGabaAntagonistExp.yaml',
+        'code/two_hemisphere_model/experiments/withoutGabaAntagonistExp.yaml',
+    output:
+        'figs/withGabaAntagonistDoughnut.yaml/gabaAntagonistEffect{hemi}.pdf',
+    run:
+        shell('ipython -c "%run code/analysis/plot_gaba_antagon_effect.py {input} {output}"')
 
 rule concat_gdf:
     input:
@@ -249,6 +262,8 @@ rule plot_raster:
 
 rule run_experiment:
     threads: 48
+    input:
+        'code/two_hemisphere_model/experiments/{experiment}',
     output:
         'data/{experiment}/{trial}/odom.bag',
         expand('data/{{experiment}}/{{trial}}/left_hemisphere-{thread}.gdf', thread=THREADS),
@@ -265,6 +280,8 @@ rule run_experiment:
 
 rule run_experiment_long:
     threads: 48
+    input:
+        'code/two_hemisphere_model/experiments/{experiment}',
     output:
         'data_long/{experiment}/{trial}/odom.bag',
         expand('data_long/{{experiment}}/{{trial}}/left_hemisphere-{thread}.gdf', thread=THREADS),

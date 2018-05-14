@@ -5,5 +5,4 @@ stim-params:
       stop_times: []
       targets: []
       amplitude: 0.
-
-
+stim-type: current

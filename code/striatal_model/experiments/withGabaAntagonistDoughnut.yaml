@@ -1,0 +1,16 @@
+stim-params:
+    - hemisphere: left
+      cell-type: both
+      start_times: [15000.]
+      stop_times: [15200.]
+      targets: [[[all]]]
+      amplitude: 140.
+    - hemisphere: right
+      cell-type: both
+      start_times: [15000.]
+      stop_times: [15200.]
+      targets: [[[all]]]
+      amplitude: 140.
+gaba-antagonist-present: True
+kernel: doughnut 
+stim-type: current

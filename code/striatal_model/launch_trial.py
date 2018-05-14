@@ -7,10 +7,10 @@ import rosbag
 import json
 from subprocess import check_output
 
-
 experiment = sys.argv[3]
 scale = float(sys.argv[6])
 trial = sys.argv[9]
+
 if scale == 1.:
     folder_ = "data"
 else:
@@ -55,14 +55,23 @@ def kill_pid(pid):
 
 
 def move_results(session):
+    print folder_
+    print experiment
+    print trial
     os.system("mv odom.bag ../../{}/{}/{}/".format(folder_, experiment, trial))
-    os.system("mv ../../{}/left_hemisphere-* ../../{}/{}/{}/".format(folder_, folder_, experiment, trial))
-    os.system("mv ../../{}/right_hemisphere-* ../../{}/{}/{}/".format(folder_, folder_, experiment, trial))
-    os.system("mv ../../{}/neuron_ids* ../../{}/{}/{}/".format(folder_, folder_, experiment, trial))
+    os.system("mv ../../{}/left_hemisphere-* ../../{}/{}/{}/".format(folder_,
+                                                                     folder_, experiment, trial))
+    os.system("mv ../../{}/right_hemisphere-* ../../{}/{}/{}/".format(folder_,
+                                                                      folder_, experiment, trial))
+    os.system("mv ../../{}/neuron_ids* ../../{}/{}/{}/".format(folder_,
+                                                               folder_, experiment, trial))
 
 
 def run(num_trials):
     for s in range(num_trials):
+        print("Running create_voting_readout.py. to regenerate channels_readout.dat")
+        os.system("python create_voting_readout.py")
+
         print("starting session {}".format(s))
         start_ros()
 
@@ -75,7 +84,11 @@ def run(num_trials):
         with open("scale.json", "w") as f:
             json.dump({"scale": scale}, f)
 
-        os.system("rosrun gazebo_ros spawn_model -sdf -file {}/pioneer3at/sdf/pioneer3at.sdf -model pioneer3at -x 0 -y 0".format(path))
+        with open("trial.json", "w") as f:
+            json.dump({"trial": trial}, f)
+
+        os.system(
+            "rosrun gazebo_ros spawn_model -sdf -file {}/pioneer3at/sdf/pioneer3at.sdf -model pioneer3at -x 0 -y 0".format(path))
         time.sleep(5)
 
         os.system("rosparam set \use_sim_time true")
@@ -85,7 +98,7 @@ def run(num_trials):
 
         # sleep for the simtime (10/ 0.15) plus one minute for saving and loading data etc
         #time.sleep(10 + 20 / 0.5)
-        time.sleep(10 + (20 * scale) / 0.2)
+        time.sleep(20 + (20 * scale) / 0.2)
 
         kill("record")
         kill_pid(sim.pid)
@@ -93,8 +106,10 @@ def run(num_trials):
 
         os.system("rm cfg.yaml")
         os.system("rm scale.json")
+        os.system("rm trial.json")
 
         move_results(s)
+        print "move done !"
 
 
 run(1)
