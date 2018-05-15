@@ -8,7 +8,7 @@ import pickle
 import pdb
 import sys
 sys.path.append(os.path.join(os.path.dirname(
-    __file__), '..', 'two_hemisphere_model/'))
+    __file__), '..', 'striatal_model/'))
 import params as p
 import json
 import matplotlib.pyplot as pl
@@ -45,7 +45,7 @@ else:
 
 # This is to separate the times of activity with and without external input
 if experiment == 'sequencesMultTrials.yaml' or experiment == 'sequencesMultTrialsd2.yaml':
-    with open("code/two_hemisphere_model/experiments/{}".format(experiment), 'r') as ymlfile:
+    with open("code/striatal_model/experiments/{}".format(experiment), 'r') as ymlfile:
         cfg = yaml.load(ymlfile)
     start_times = cfg['stim-params'][1]['start_times']
     stop_times = cfg['stim-params'][1]['stop_times']

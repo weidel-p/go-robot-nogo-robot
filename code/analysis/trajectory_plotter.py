@@ -13,7 +13,7 @@ import os
 import scipy.signal as sciSig
 import yaml
 import colors
-sys.path.append("code/two_hemisphere_model")
+sys.path.append("code/striatal_model")
 import params
 from plot_tools2 import *
 from matplotlib.collections import LineCollection

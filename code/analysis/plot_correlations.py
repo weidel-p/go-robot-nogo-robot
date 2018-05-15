@@ -8,7 +8,7 @@ import seaborn
 import sys
 import json
 import yaml
-sys.path.append("code/two_hemisphere_model")
+sys.path.append("code/striatal_model")
 import params
 from colors import colors
 from plot_tools2 import *

@@ -6,7 +6,7 @@ import pylab as pl
 import sys
 import json
 import yaml
-sys.path.append("code/two_hemisphere_model")
+sys.path.append("code/striatal_model")
 import params
 import colors
 from plot_tools2 import *
